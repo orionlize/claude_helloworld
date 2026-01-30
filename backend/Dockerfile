@@ -8,12 +8,12 @@ RUN apk add --no-cache git
 # Copy go mod files
 COPY go.mod go.sum ./
 RUN go mod download
-RUN go mod tidy
 
 # Copy source code
 COPY . .
 
-# Build the application
+# Tidy and build
+RUN go mod tidy
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o bin/api ./cmd/api
 
 # Final stage
