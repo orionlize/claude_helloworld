@@ -122,6 +122,15 @@ func main() {
 		}
 	}
 
+	// Serve static files (frontend)
+	r.Static("/assets", "./frontend/dist/assets")
+	r.StaticFile("/favicon.ico", "./frontend/dist/favicon.ico")
+
+	// SPA fallback - serve index.html for all non-API routes
+	r.NoRoute(func(c *gin.Context) {
+		c.File("./frontend/dist/index.html")
+	})
+
 	// Start server
 	port := cfg.Server.Port
 	if port == "" {

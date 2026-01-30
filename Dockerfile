@@ -1,4 +1,22 @@
-FROM golang:1.21-alpine AS builder
+# Build stage for frontend
+FROM node:20-alpine AS frontend-builder
+
+WORKDIR /frontend
+
+# Copy frontend package files
+COPY frontend/package.json frontend/package-lock.json* ./
+
+# Install dependencies
+RUN npm install
+
+# Copy frontend source
+COPY frontend/ ./
+
+# Build frontend
+RUN npm run build
+
+# Build stage for backend
+FROM golang:1.21-alpine AS backend-builder
 
 WORKDIR /app
 
@@ -27,7 +45,11 @@ RUN apk --no-cache add ca-certificates tzdata
 
 WORKDIR /app
 
-COPY --from=builder /app/api ./
+# Copy backend binary
+COPY --from=backend-builder /app/api ./
+
+# Copy frontend build
+COPY --from=frontend-builder /frontend/dist ./frontend/dist
 
 EXPOSE 8080
 
