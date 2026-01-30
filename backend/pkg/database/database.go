@@ -1,6 +1,7 @@
 package database
 
 import (
+	"context"
 	"fmt"
 	"apihub/internal/config"
 
@@ -18,12 +19,7 @@ func Connect(cfg config.DatabaseConfig) (*pgxpool.Pool, error) {
 		cfg.SSLMode,
 	)
 
-	config, err := pgxpool.ParseConfig(connString)
-	if err != nil {
-		return nil, fmt.Errorf("unable to parse database config: %w", err)
-	}
-
-	pool, err := pgxpool.ConnectConfig(nil, config)
+	pool, err := pgxpool.New(context.Background(), connString)
 	if err != nil {
 		return nil, fmt.Errorf("unable to connect to database: %w", err)
 	}
