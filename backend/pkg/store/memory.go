@@ -5,7 +5,6 @@ import (
 	"sync"
 	"time"
 
-	"golang.org/x/crypto/bcrypt"
 	"apihub/internal/model"
 )
 
