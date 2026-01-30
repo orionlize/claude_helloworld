@@ -1,9 +1,5 @@
 [phases.build]
-cmds = [
-  "go version",
-  "cd backend && go mod download",
-  "cd backend && go build -o bin/api ./cmd/api"
-]
+cmds = ["cd backend && go build -o bin/api ./cmd/api"]
 
 [phases.start]
 cmd = "backend/bin/api"
@@ -11,4 +7,3 @@ cmd = "backend/bin/api"
 [variables]
 ENVIRONMENT = "production"
 DB_MODE = "memory"
-JWT_SECRET = "${{secrets.JWT_SECRET}}"
