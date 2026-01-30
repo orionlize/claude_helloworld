@@ -5,6 +5,7 @@ import (
 	"sync"
 	"time"
 
+	"golang.org/x/crypto/bcrypt"
 	"apihub/internal/model"
 )
 
@@ -29,11 +30,14 @@ func NewMemoryStore() *MemoryStore {
 		userIDCounter: 1,
 	}
 
+	// Generate password hash for demo123
+	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte("demo123"), bcrypt.DefaultCost)
+
 	// Create demo user (password: demo123)
 	demoUser := &model.User{
 		ID:        1,
 		Email:     "demo@example.com",
-		Password:  "$2a$10$N9qo8uLOickgx2ZMRZoMye1j50A5UxWmuWxNKX3zJX3HJWnP5y0qW",
+		Password:  string(hashedPassword),
 		Name:      "Demo User",
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
