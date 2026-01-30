@@ -204,7 +204,7 @@ func (h *Handler) ListCollections(c *gin.Context) {
 
 func (h *Handler) CreateCollection(c *gin.Context) {
 	projectID := c.Param("project_id")
-	userID := c.GetString("user_id")
+	_userID := c.GetString("user_id")
 
 	var req model.CreateCollectionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
