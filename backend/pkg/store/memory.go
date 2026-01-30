@@ -1,6 +1,7 @@
 package store
 
 import (
+	"fmt"
 	"sync"
 	"time"
 
@@ -106,9 +107,10 @@ func (s *MemoryStore) GetProjectsByUserID(userID int64) ([]model.Project, error)
 	defer s.mu.RUnlock()
 
 	var projects []model.Project
+	userIDStr := fmt.Sprintf("%d", userID)
 	for _, project := range s.projects {
-		// Convert userID string to int64 for comparison
-		if project.UserID == string(rune(userID)) {
+		// Compare userID as string
+		if project.UserID == userIDStr {
 			projects = append(projects, *project)
 		}
 	}

@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"strings"
@@ -12,6 +13,7 @@ import (
 	"apihub/pkg/response"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgx/v5"
 )
 
 func (h *Handler) ListProjects(c *gin.Context) {
@@ -92,7 +94,7 @@ func (h *Handler) GetProject(c *gin.Context) {
 		&project.ID, &project.Name, &project.Description, &project.UserID, &project.CreatedAt, &project.UpdatedAt,
 	)
 	if err != nil {
-		if err == pgx.ErrNoRows {
+		if errors.Is(err, pgx.ErrNoRows) {
 			response.Error(c, 404, "Project not found")
 		} else {
 			response.Error(c, 500, "Database error")
@@ -126,7 +128,7 @@ func (h *Handler) UpdateProject(c *gin.Context) {
 		&project.ID, &project.Name, &project.Description, &project.UserID, &project.CreatedAt, &project.UpdatedAt,
 	)
 	if err != nil {
-		if err == pgx.ErrNoRows {
+		if errors.Is(err, pgx.ErrNoRows) {
 			response.Error(c, 404, "Project not found")
 		} else {
 			response.Error(c, 500, "Database error")
@@ -359,7 +361,7 @@ func (h *Handler) ListEndpoints(c *gin.Context) {
 
 func (h *Handler) CreateEndpoint(c *gin.Context) {
 	collectionID := c.Param("collection_id")
-	_userID := c.GetString("user_id")
+	// _userID := c.GetString("user_id")
 
 	var req model.CreateEndpointRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -419,7 +421,8 @@ func (h *Handler) GetEndpoint(c *gin.Context) {
 		json.Unmarshal(headersJSON, &endpoint.Headers)
 	}
 	if len(bodyJSON) > 0 {
-		endpoint.Body = (*string)(&bodyJSON)
+		bodyStr := string(bodyJSON)
+		endpoint.Body = &bodyStr
 	}
 
 	response.Success(c, 200, endpoint)
@@ -458,7 +461,8 @@ func (h *Handler) UpdateEndpoint(c *gin.Context) {
 
 	json.Unmarshal(headersJSON, &endpoint.Headers)
 	if len(bodyJSON) > 0 {
-		endpoint.Body = (*string)(&bodyJSON)
+		bodyStr := string(bodyJSON)
+		endpoint.Body = &bodyStr
 	}
 
 	response.Success(c, 200, endpoint)
@@ -531,7 +535,7 @@ func (h *Handler) ListEnvironments(c *gin.Context) {
 
 func (h *Handler) CreateEnvironment(c *gin.Context) {
 	projectID := c.Param("project_id")
-	_userID := c.GetString("user_id")
+	// _userID := c.GetString("user_id")
 
 	var req model.CreateEnvironmentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {

@@ -114,13 +114,25 @@ func (h *Handler) Login(c *gin.Context) {
 }
 
 func (h *Handler) GetCurrentUser(c *gin.Context) {
-	userIDInt, exists := c.Get("user_id")
+	userIDStr, exists := c.Get("user_id")
 	if !exists {
 		response.Error(c, 401, "Unauthorized")
 		return
 	}
 
-	userID := userIDInt.(int64)
+	// Convert string user_id to int64
+	var userID int64
+	if str, ok := userIDStr.(string); ok {
+		_, err := fmt.Sscanf(str, "%d", &userID)
+		if err != nil {
+			response.Error(c, 401, "Invalid user ID")
+			return
+		}
+	} else {
+		response.Error(c, 401, "Invalid user ID type")
+		return
+	}
+
 	user, err := h.store.GetUserByID(userID)
 	if err != nil || user == nil {
 		response.Error(c, 404, "User not found")
