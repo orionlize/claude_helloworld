@@ -1,33 +1,34 @@
 # Railway Dockerfile
 FROM golang:1.21-alpine AS builder
 
-WORKDIR /app/backend
+WORKDIR /app
 
-# Copy go mod files
-COPY backend/go.mod backend/go.sum ./
+# Install build dependencies
+RUN apk add --no-cache git
+
+# Copy backend source
+COPY backend/ ./backend/
+
+WORKDIR /app/backend
 
 # Download dependencies
 RUN go mod download
 
-# Copy source code
-COPY backend/ ./
-
 # Build
-RUN CGO_ENABLED=0 go build -o bin/api ./cmd/api
+RUN CGO_ENABLED=0 GOOS=linux go build -o api ./cmd/api
 
 # Final stage
 FROM alpine:latest
 
-RUN apk --no-cache add ca-certificates
+RUN apk --no-cache add ca-certificates tzdata
 
-WORKDIR /app/backend
+WORKDIR /app
 
-COPY --from=builder /app/backend/bin/api ./
+COPY --from=builder /app/backend/api ./
 
 EXPOSE 8080
 
 ENV ENVIRONMENT=production
 ENV DB_MODE=memory
-ENV PORT=8080
 
 CMD ./api
