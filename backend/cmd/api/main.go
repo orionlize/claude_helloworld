@@ -87,50 +87,33 @@ func main() {
 		protected.Use(middleware.Auth(cfg.JWT.Secret))
 		{
 			// User routes
-			users := protected.Group("/users")
-			{
-				users.GET("/me", h.GetCurrentUser)
-			}
+			protected.GET("/users/me", h.GetCurrentUser)
 
-			// Project routes
-			projects := protected.Group("/projects")
-			{
-				projects.GET("", h.ListProjects)
-				projects.POST("", h.CreateProject)
-				projects.GET("/:id", h.GetProject)
-				projects.PUT("/:id", h.UpdateProject)
-				projects.DELETE("/:id", h.DeleteProject)
-			}
+			// Project nested routes (must be defined before /projects/:id)
+			protected.GET("/projects/:project_id/collections", h.ListCollections)
+			protected.POST("/projects/:project_id/collections", h.CreateCollection)
+			protected.GET("/projects/:project_id/collections/:id", h.GetCollection)
+			protected.PUT("/projects/:project_id/collections/:id", h.UpdateCollection)
+			protected.DELETE("/projects/:project_id/collections/:id", h.DeleteCollection)
 
-			// API Collection routes
-			collections := protected.Group("/projects/:project_id/collections")
-			{
-				collections.GET("", h.ListCollections)
-				collections.POST("", h.CreateCollection)
-				collections.GET("/:id", h.GetCollection)
-				collections.PUT("/:id", h.UpdateCollection)
-				collections.DELETE("/:id", h.DeleteCollection)
-			}
+			protected.GET("/projects/:project_id/environments", h.ListEnvironments)
+			protected.POST("/projects/:project_id/environments", h.CreateEnvironment)
+			protected.GET("/projects/:project_id/environments/:id", h.GetEnvironment)
+			protected.PUT("/projects/:project_id/environments/:id", h.UpdateEnvironment)
+			protected.DELETE("/projects/:project_id/environments/:id", h.DeleteEnvironment)
 
-			// API Endpoint routes
-			endpoints := protected.Group("/collections/:collection_id/endpoints")
-			{
-				endpoints.GET("", h.ListEndpoints)
-				endpoints.POST("", h.CreateEndpoint)
-				endpoints.GET("/:id", h.GetEndpoint)
-				endpoints.PUT("/:id", h.UpdateEndpoint)
-				endpoints.DELETE("/:id", h.DeleteEndpoint)
-			}
+			protected.GET("/collections/:collection_id/endpoints", h.ListEndpoints)
+			protected.POST("/collections/:collection_id/endpoints", h.CreateEndpoint)
+			protected.GET("/collections/:collection_id/endpoints/:id", h.GetEndpoint)
+			protected.PUT("/collections/:collection_id/endpoints/:id", h.UpdateEndpoint)
+			protected.DELETE("/collections/:collection_id/endpoints/:id", h.DeleteEndpoint)
 
-			// Environment routes
-			environments := protected.Group("/projects/:project_id/environments")
-			{
-				environments.GET("", h.ListEnvironments)
-				environments.POST("", h.CreateEnvironment)
-				environments.GET("/:id", h.GetEnvironment)
-				environments.PUT("/:id", h.UpdateEnvironment)
-				environments.DELETE("/:id", h.DeleteEnvironment)
-			}
+			// Project routes (must be last - wildcard routes)
+			protected.GET("/projects", h.ListProjects)
+			protected.POST("/projects", h.CreateProject)
+			protected.GET("/projects/:id", h.GetProject)
+			protected.PUT("/projects/:id", h.UpdateProject)
+			protected.DELETE("/projects/:id", h.DeleteProject)
 		}
 	}
 
