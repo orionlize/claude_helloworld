@@ -3,10 +3,9 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { projectsApi, collectionsApi, endpointsApi } from '@/lib/api'
 import { useProjectStore } from '@/store/project'
-import type { Collection, Endpoint } from '@/types'
 import { ArrowLeft, Plus, Folder, File, Trash2, ChevronRight } from 'lucide-react'
 
 export default function ProjectPage() {
