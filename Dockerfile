@@ -14,6 +14,9 @@ RUN go mod download
 # Copy source
 COPY backend/ ./
 
+# Download and tidy dependencies
+RUN go mod tidy
+
 # Build
 RUN CGO_ENABLED=0 GOOS=linux go build -o api ./cmd/api
 
