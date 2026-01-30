@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"fmt"
 	"time"
 
 	"apihub/pkg/logger"
@@ -19,6 +20,6 @@ func Logger() gin.HandlerFunc {
 		latency := time.Since(start)
 		status := c.Writer.Status()
 
-		logger.Debug(method + " " + path + " - " + status.String() + " - " + latency.String())
+		logger.Debug(fmt.Sprintf("%s %s - %d - %s", method, path, status, latency))
 	}
 }

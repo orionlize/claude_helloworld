@@ -12,8 +12,6 @@ import (
 	"apihub/pkg/response"
 
 	"github.com/gin-gonic/gin"
-	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 func (h *Handler) ListProjects(c *gin.Context) {
@@ -349,7 +347,8 @@ func (h *Handler) ListEndpoints(c *gin.Context) {
 			json.Unmarshal(headersJSON, &e.Headers)
 		}
 		if len(bodyJSON) > 0 {
-			e.Body = (*string)(&bodyJSON)
+			bodyStr := string(bodyJSON)
+			e.Body = &bodyStr
 		}
 
 		endpoints = append(endpoints, e)
@@ -360,7 +359,7 @@ func (h *Handler) ListEndpoints(c *gin.Context) {
 
 func (h *Handler) CreateEndpoint(c *gin.Context) {
 	collectionID := c.Param("collection_id")
-	userID := c.GetString("user_id")
+	_userID := c.GetString("user_id")
 
 	var req model.CreateEndpointRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -532,7 +531,7 @@ func (h *Handler) ListEnvironments(c *gin.Context) {
 
 func (h *Handler) CreateEnvironment(c *gin.Context) {
 	projectID := c.Param("project_id")
-	userID := c.GetString("user_id")
+	_userID := c.GetString("user_id")
 
 	var req model.CreateEnvironmentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
