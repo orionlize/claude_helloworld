@@ -1,9 +1,0 @@
-[phases.build]
-cmds = ["cd backend && go build -o ../bin/api ./cmd/api"]
-
-[phases.start]
-cmd = "bin/api"
-
-[variables]
-ENVIRONMENT = "production"
-DB_MODE = "memory"
