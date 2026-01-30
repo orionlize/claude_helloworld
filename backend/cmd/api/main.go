@@ -52,13 +52,12 @@ func main() {
 
 	r := gin.Default()
 
-	// CORS middleware - allow all origins in development
+	// CORS middleware - allow all origins
 	r.Use(cors.New(cors.Config{
-		AllowAllOrigins:  cfg.Environment != "production",
+		AllowAllOrigins:  true,
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization", "X-Requested-With"},
 		ExposeHeaders:    []string{"Content-Length", "Content-Type"},
-		AllowCredentials: true,
 		MaxAge:           12 * time.Hour,
 	}))
 
