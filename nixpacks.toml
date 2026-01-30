@@ -1,0 +1,12 @@
+[phases.build]
+cmds = ["cd backend && go build -o bin/api ./cmd/api"]
+
+[phases.start]
+cmd = "backend/bin/api"
+
+[variables]
+ENVIRONMENT = "production"
+DB_MODE = "memory"
+SERVER_PORT = "8081"
+JWT_SECRET = "${{secrets.JWT_SECRET}}"
+PORT = "8081"

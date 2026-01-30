@@ -126,7 +126,10 @@ func main() {
 	// Start server
 	port := cfg.Server.Port
 	if port == "" {
-		port = "8080"
+		// Railway uses PORT environment variable
+		if port = os.Getenv("PORT"); port == "" {
+			port = "8080"
+		}
 	}
 
 	logger.Info("Starting server on port " + port)
