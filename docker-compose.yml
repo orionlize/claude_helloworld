@@ -32,7 +32,7 @@ services:
     restart: unless-stopped
 
   meta:
-    image: supabase/postgres-meta:0.74.0
+    image: supabase/postgres-meta:latest
     container_name: apihub_meta
     environment:
       PG_META_PORT: 8080
@@ -61,9 +61,9 @@ services:
       DB_PASSWORD: your-super-secret-and-long-postgres-password
       DB_NAME: postgres
       JWT_SECRET: your-jwt-secret-key-change-this-in-production
-      SERVER_PORT: 8080
+      SERVER_PORT: 8081
     ports:
-      - "8080:8080"
+      - "8081:8081"
     depends_on:
       db:
         condition: service_healthy
