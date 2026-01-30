@@ -1,0 +1,33 @@
+# Railway Dockerfile
+FROM golang:1.21-alpine AS builder
+
+WORKDIR /app/backend
+
+# Copy go mod files
+COPY backend/go.mod backend/go.sum ./
+
+# Download dependencies
+RUN go mod download
+
+# Copy source code
+COPY backend/ ./
+
+# Build
+RUN CGO_ENABLED=0 go build -o bin/api ./cmd/api
+
+# Final stage
+FROM alpine:latest
+
+RUN apk --no-cache add ca-certificates
+
+WORKDIR /app/backend
+
+COPY --from=builder /app/backend/bin/api ./
+
+EXPOSE 8080
+
+ENV ENVIRONMENT=production
+ENV DB_MODE=memory
+ENV PORT=8080
+
+CMD ./api
