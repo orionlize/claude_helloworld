@@ -80,7 +80,7 @@ func (h *Handler) CreateProject(c *gin.Context) {
 
 func (h *Handler) GetProject(c *gin.Context) {
 	userID := c.GetString("user_id")
-	projectID := c.Param("id")
+	projectID := c.Param("pid")
 
 	ctx := context.Background()
 	query := `
@@ -107,7 +107,7 @@ func (h *Handler) GetProject(c *gin.Context) {
 
 func (h *Handler) UpdateProject(c *gin.Context) {
 	userID := c.GetString("user_id")
-	projectID := c.Param("id")
+	projectID := c.Param("pid")
 
 	var req model.UpdateProjectRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -141,7 +141,7 @@ func (h *Handler) UpdateProject(c *gin.Context) {
 
 func (h *Handler) DeleteProject(c *gin.Context) {
 	userID := c.GetString("user_id")
-	projectID := c.Param("id")
+	projectID := c.Param("pid")
 
 	ctx := context.Background()
 	query := `DELETE FROM projects WHERE id = $1 AND user_id = $2`
@@ -162,7 +162,7 @@ func (h *Handler) DeleteProject(c *gin.Context) {
 
 // Collections
 func (h *Handler) ListCollections(c *gin.Context) {
-	projectID := c.Param("project_id")
+	projectID := c.Param("pid")
 	userID := c.GetString("user_id")
 
 	// First verify project ownership
@@ -203,7 +203,7 @@ func (h *Handler) ListCollections(c *gin.Context) {
 }
 
 func (h *Handler) CreateCollection(c *gin.Context) {
-	projectID := c.Param("project_id")
+	projectID := c.Param("pid")
 	// _userID := c.GetString("user_id")
 
 	var req model.CreateCollectionRequest
@@ -234,7 +234,7 @@ func (h *Handler) CreateCollection(c *gin.Context) {
 }
 
 func (h *Handler) GetCollection(c *gin.Context) {
-	collectionID := c.Param("id")
+	collectionID := c.Param("cid")
 	userID := c.GetString("user_id")
 
 	ctx := context.Background()
@@ -258,7 +258,7 @@ func (h *Handler) GetCollection(c *gin.Context) {
 }
 
 func (h *Handler) UpdateCollection(c *gin.Context) {
-	collectionID := c.Param("id")
+	collectionID := c.Param("cid")
 	userID := c.GetString("user_id")
 
 	var req model.UpdateCollectionRequest
@@ -289,7 +289,7 @@ func (h *Handler) UpdateCollection(c *gin.Context) {
 }
 
 func (h *Handler) DeleteCollection(c *gin.Context) {
-	collectionID := c.Param("id")
+	collectionID := c.Param("cid")
 	userID := c.GetString("user_id")
 
 	ctx := context.Background()
@@ -315,7 +315,7 @@ func (h *Handler) DeleteCollection(c *gin.Context) {
 
 // Endpoints
 func (h *Handler) ListEndpoints(c *gin.Context) {
-	collectionID := c.Param("collection_id")
+	collectionID := c.Param("cid")
 	userID := c.GetString("user_id")
 
 	ctx := context.Background()
@@ -360,7 +360,7 @@ func (h *Handler) ListEndpoints(c *gin.Context) {
 }
 
 func (h *Handler) CreateEndpoint(c *gin.Context) {
-	collectionID := c.Param("collection_id")
+	collectionID := c.Param("cid")
 	// _userID := c.GetString("user_id")
 
 	var req model.CreateEndpointRequest
@@ -395,7 +395,7 @@ func (h *Handler) CreateEndpoint(c *gin.Context) {
 }
 
 func (h *Handler) GetEndpoint(c *gin.Context) {
-	endpointID := c.Param("id")
+	endpointID := c.Param("epid")
 	userID := c.GetString("user_id")
 
 	ctx := context.Background()
@@ -429,7 +429,7 @@ func (h *Handler) GetEndpoint(c *gin.Context) {
 }
 
 func (h *Handler) UpdateEndpoint(c *gin.Context) {
-	endpointID := c.Param("id")
+	endpointID := c.Param("cid")
 	userID := c.GetString("user_id")
 
 	var req model.UpdateEndpointRequest
@@ -469,7 +469,7 @@ func (h *Handler) UpdateEndpoint(c *gin.Context) {
 }
 
 func (h *Handler) DeleteEndpoint(c *gin.Context) {
-	endpointID := c.Param("id")
+	endpointID := c.Param("cid")
 	userID := c.GetString("user_id")
 
 	ctx := context.Background()
@@ -495,7 +495,7 @@ func (h *Handler) DeleteEndpoint(c *gin.Context) {
 
 // Environments
 func (h *Handler) ListEnvironments(c *gin.Context) {
-	projectID := c.Param("project_id")
+	projectID := c.Param("cid")
 	userID := c.GetString("user_id")
 
 	ctx := context.Background()
@@ -534,7 +534,7 @@ func (h *Handler) ListEnvironments(c *gin.Context) {
 }
 
 func (h *Handler) CreateEnvironment(c *gin.Context) {
-	projectID := c.Param("project_id")
+	projectID := c.Param("cid")
 	// _userID := c.GetString("user_id")
 
 	var req model.CreateEnvironmentRequest
@@ -569,7 +569,7 @@ func (h *Handler) CreateEnvironment(c *gin.Context) {
 }
 
 func (h *Handler) GetEnvironment(c *gin.Context) {
-	envID := c.Param("id")
+	envID := c.Param("eid")
 	userID := c.GetString("user_id")
 
 	ctx := context.Background()
@@ -598,7 +598,7 @@ func (h *Handler) GetEnvironment(c *gin.Context) {
 }
 
 func (h *Handler) UpdateEnvironment(c *gin.Context) {
-	envID := c.Param("id")
+	envID := c.Param("cid")
 	userID := c.GetString("user_id")
 
 	var req model.UpdateEnvironmentRequest
@@ -633,7 +633,7 @@ func (h *Handler) UpdateEnvironment(c *gin.Context) {
 }
 
 func (h *Handler) DeleteEnvironment(c *gin.Context) {
-	envID := c.Param("id")
+	envID := c.Param("cid")
 	userID := c.GetString("user_id")
 
 	ctx := context.Background()

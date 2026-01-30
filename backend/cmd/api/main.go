@@ -89,31 +89,35 @@ func main() {
 			// User routes
 			protected.GET("/users/me", h.GetCurrentUser)
 
-			// Project nested routes (must be defined before /projects/:id)
-			protected.GET("/projects/:project_id/collections", h.ListCollections)
-			protected.POST("/projects/:project_id/collections", h.CreateCollection)
-			protected.GET("/projects/:project_id/collections/:id", h.GetCollection)
-			protected.PUT("/projects/:project_id/collections/:id", h.UpdateCollection)
-			protected.DELETE("/projects/:project_id/collections/:id", h.DeleteCollection)
-
-			protected.GET("/projects/:project_id/environments", h.ListEnvironments)
-			protected.POST("/projects/:project_id/environments", h.CreateEnvironment)
-			protected.GET("/projects/:project_id/environments/:id", h.GetEnvironment)
-			protected.PUT("/projects/:project_id/environments/:id", h.UpdateEnvironment)
-			protected.DELETE("/projects/:project_id/environments/:id", h.DeleteEnvironment)
-
-			protected.GET("/collections/:collection_id/endpoints", h.ListEndpoints)
-			protected.POST("/collections/:collection_id/endpoints", h.CreateEndpoint)
-			protected.GET("/collections/:collection_id/endpoints/:id", h.GetEndpoint)
-			protected.PUT("/collections/:collection_id/endpoints/:id", h.UpdateEndpoint)
-			protected.DELETE("/collections/:collection_id/endpoints/:id", h.DeleteEndpoint)
-
-			// Project routes (must be last - wildcard routes)
+			// Project routes
 			protected.GET("/projects", h.ListProjects)
 			protected.POST("/projects", h.CreateProject)
-			protected.GET("/projects/:id", h.GetProject)
-			protected.PUT("/projects/:id", h.UpdateProject)
-			protected.DELETE("/projects/:id", h.DeleteProject)
+
+			// Collections (nested under project)
+			protected.GET("/projects/:pid/collections", h.ListCollections)
+			protected.POST("/projects/:pid/collections", h.CreateCollection)
+			protected.GET("/collections/:cid", h.GetCollection)
+			protected.PUT("/collections/:cid", h.UpdateCollection)
+			protected.DELETE("/collections/:cid", h.DeleteCollection)
+
+			// Environments (nested under project)
+			protected.GET("/projects/:pid/environments", h.ListEnvironments)
+			protected.POST("/projects/:pid/environments", h.CreateEnvironment)
+			protected.GET("/environments/:eid", h.GetEnvironment)
+			protected.PUT("/environments/:eid", h.UpdateEnvironment)
+			protected.DELETE("/environments/:eid", h.DeleteEnvironment)
+
+			// Endpoints (nested under collection)
+			protected.GET("/collections/:cid/endpoints", h.ListEndpoints)
+			protected.POST("/collections/:cid/endpoints", h.CreateEndpoint)
+			protected.GET("/endpoints/:epid", h.GetEndpoint)
+			protected.PUT("/endpoints/:epid", h.UpdateEndpoint)
+			protected.DELETE("/endpoints/:epid", h.DeleteEndpoint)
+
+			// Project detail routes (must be last)
+			protected.GET("/projects/:pid", h.GetProject)
+			protected.PUT("/projects/:pid", h.UpdateProject)
+			protected.DELETE("/projects/:pid", h.DeleteProject)
 		}
 	}
 
