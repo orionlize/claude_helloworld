@@ -21,6 +21,7 @@ type ServerConfig struct {
 }
 
 type DatabaseConfig struct {
+	Mode     string // "memory" or "postgres"
 	Host     string
 	Port     string
 	User     string
@@ -48,6 +49,7 @@ func Load() (*Config, error) {
 			Port: getEnv("SERVER_PORT", "8080"),
 		},
 		Database: DatabaseConfig{
+			Mode:     getEnv("DB_MODE", "postgres"),
 			Host:     getEnv("DB_HOST", "localhost"),
 			Port:     getEnv("DB_PORT", "5432"),
 			User:     getEnv("DB_USER", "postgres"),

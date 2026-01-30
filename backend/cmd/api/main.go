@@ -9,9 +9,11 @@ import (
 	"apihub/internal/middleware"
 	"apihub/pkg/database"
 	"apihub/pkg/logger"
+	"apihub/pkg/store"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 func main() {
@@ -24,12 +26,23 @@ func main() {
 	// Initialize logger
 	logger.Init(cfg.LogLevel)
 
-	// Connect to database
-	db, err := database.Connect(cfg.Database)
-	if err != nil {
-		log.Fatal("Failed to connect to database:", err)
+	// Initialize store based on DB mode
+	var db *pgxpool.Pool
+	var str store.Store
+	var dbErr error
+
+	if cfg.Database.Mode == "memory" {
+		logger.Info("Using in-memory store")
+		str = store.NewMemoryStore()
+	} else {
+		logger.Info("Using PostgreSQL database")
+		// Connect to database
+		db, dbErr = database.Connect(cfg.Database)
+		if dbErr != nil {
+			log.Fatal("Failed to connect to database:", dbErr)
+		}
+		defer db.Close()
 	}
-	defer db.Close()
 
 	// Initialize Gin router
 	if cfg.Environment == "production" {
@@ -53,11 +66,11 @@ func main() {
 
 	// Health check
 	r.GET("/health", func(c *gin.Context) {
-		c.JSON(200, gin.H{"status": "ok"})
+		c.JSON(200, gin.H{"status": "ok", "mode": cfg.Database.Mode})
 	})
 
 	// Initialize handlers
-	h := handler.New(db, cfg)
+	h := handler.New(db, cfg, str)
 
 	// API routes
 	api := r.Group("/api/v1")
@@ -67,7 +80,6 @@ func main() {
 		{
 			auth.POST("/register", h.Register)
 			auth.POST("/login", h.Login)
-			auth.POST("/refresh", h.RefreshToken)
 		}
 
 		// Protected routes
@@ -78,7 +90,6 @@ func main() {
 			users := protected.Group("/users")
 			{
 				users.GET("/me", h.GetCurrentUser)
-				users.PUT("/me", h.UpdateCurrentUser)
 			}
 
 			// Project routes
@@ -120,9 +131,6 @@ func main() {
 				environments.PUT("/:id", h.UpdateEnvironment)
 				environments.DELETE("/:id", h.DeleteEnvironment)
 			}
-
-			// Request testing routes
-			api.GET("/test/request", h.SendRequest)
 		}
 	}
 
