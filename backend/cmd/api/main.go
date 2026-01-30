@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"os"
+	"time"
 
 	"apihub/internal/config"
 	"apihub/internal/handler"
@@ -51,13 +52,14 @@ func main() {
 
 	r := gin.Default()
 
-	// CORS middleware
+	// CORS middleware - allow all origins in development
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     cfg.CORS.AllowOrigins,
+		AllowAllOrigins:  cfg.Environment != "production",
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
-		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
-		ExposeHeaders:    []string{"Content-Length"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization", "X-Requested-With"},
+		ExposeHeaders:    []string{"Content-Length", "Content-Type"},
 		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
 	}))
 
 	// Global middleware
