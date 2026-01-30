@@ -5,9 +5,8 @@ WORKDIR /app
 # Install build dependencies
 RUN apk add --no-cache git
 
-# Copy go.mod and go.sum
+# Copy go.mod
 COPY backend/go.mod ./go.mod
-COPY backend/go.sum ./go.sum
 
 # Download dependencies
 RUN go mod download
