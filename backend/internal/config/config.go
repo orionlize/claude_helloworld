@@ -28,6 +28,7 @@ type DatabaseConfig struct {
 	Password string
 	DBName   string
 	SSLMode  string
+	URL      string // Full database URL (for Supabase)
 }
 
 type JWTConfig struct {
@@ -56,6 +57,7 @@ func Load() (*Config, error) {
 			Password: getEnv("DB_PASSWORD", "postgres"),
 			DBName:   getEnv("DB_NAME", "apihub"),
 			SSLMode:  getEnv("DB_SSLMODE", "disable"),
+			URL:      getEnv("DATABASE_URL", ""),
 		},
 		JWT: JWTConfig{
 			Secret:     getEnv("JWT_SECRET", "your-secret-key-change-this"),
