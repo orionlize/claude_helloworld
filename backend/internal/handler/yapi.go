@@ -168,8 +168,17 @@ func (h *Handler) TestYAPIConnection(c *gin.Context) {
 		return
 	}
 
-	if err := yapi.ValidateConfig(req); err != nil {
-		response.Error(c, 400, err.Error())
+	// For testing connection, only validate YAPI-specific fields (not ProjectID which is for sync)
+	if req.YAPIUrl == "" {
+		response.Error(c, 400, "yapi_url is required")
+		return
+	}
+	if req.YAPIToken == "" {
+		response.Error(c, 400, "yapi_token is required")
+		return
+	}
+	if req.YAPIProjectID == 0 {
+		response.Error(c, 400, "yapi_project_id is required")
 		return
 	}
 
