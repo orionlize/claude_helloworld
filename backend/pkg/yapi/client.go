@@ -37,38 +37,100 @@ func NewClient(baseURL, token string) *Client {
 	}
 }
 
-// GetInterfaces fetches all interfaces from a YAPI project
+// GetInterfaces fetches all interfaces from a YAPI project with pagination support
 func (c *Client) GetInterfaces(projectID int) ([]model.YAPIInterface, error) {
-	url := fmt.Sprintf("%s/interface/get_list?project_id=%d&token=%s", c.BaseURL, projectID, c.Token)
+	var allInterfaces []model.YAPIInterface
+	page := 1
+	limit := 100 // YAPI default limit per page
 
-	resp, err := c.HTTPClient.Get(url)
+	for {
+		url := fmt.Sprintf("%s/interface/get_list?project_id=%d&token=%s&page=%d&limit=%d", c.BaseURL, projectID, c.Token, page, limit)
+
+		resp, err := c.HTTPClient.Get(url)
+		if err != nil {
+			return nil, fmt.Errorf("failed to fetch interfaces (page %d): %w", page, err)
+		}
+		defer resp.Body.Close()
+
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read response: %w", err)
+		}
+
+		var yapiResp struct {
+			Errcode int    `json:"errcode"`
+			ErrMsg  string `json:"errmsg"`
+			Data    struct {
+				List []model.YAPIInterface `json:"list"`
+				Count int                  `json:"count"` // Total count
+			} `json:"data"`
+		}
+
+		if err := json.Unmarshal(body, &yapiResp); err != nil {
+			return nil, fmt.Errorf("failed to parse response: %w", err)
+		}
+
+		if yapiResp.Errcode != 0 {
+			// Try alternative API endpoint if get_list fails
+			return c.getInterfacesByCategory(projectID)
+		}
+
+		allInterfaces = append(allInterfaces, yapiResp.Data.List...)
+
+		// Check if we've fetched all interfaces
+		if len(yapiResp.Data.List) == 0 || len(allInterfaces) >= yapiResp.Data.Count {
+			break
+		}
+
+		page++
+	}
+
+	return allInterfaces, nil
+}
+
+// getInterfacesByCategory fetches interfaces by category (alternative method)
+func (c *Client) getInterfacesByCategory(projectID int) ([]model.YAPIInterface, error) {
+	// First get all categories
+	categories, err := c.GetCategories(projectID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to fetch interfaces: %w", err)
-	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read response: %w", err)
+		return nil, fmt.Errorf("failed to get categories: %w", err)
 	}
 
-	var yapiResp struct {
-		Errcode int    `json:"errcode"`
-		ErrMsg  string `json:"errmsg"`
-		Data    struct {
-			List []model.YAPIInterface `json:"list"`
-		} `json:"data"`
+	var allInterfaces []model.YAPIInterface
+	for _, cat := range categories {
+		url := fmt.Sprintf("%s/interface/list_cat?catid=%d&token=%s", c.BaseURL, cat.ID, c.Token)
+
+		resp, err := c.HTTPClient.Get(url)
+		if err != nil {
+			continue
+		}
+		defer resp.Body.Close()
+
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			continue
+		}
+
+		var yapiResp struct {
+			Errcode int                  `json:"errcode"`
+			ErrMsg  string               `json:"errmsg"`
+			Data    []model.YAPIInterface `json:"data"`
+		}
+
+		if err := json.Unmarshal(body, &yapiResp); err != nil {
+			continue
+		}
+
+		if yapiResp.Errcode == 0 {
+			allInterfaces = append(allInterfaces, yapiResp.Data...)
+		}
 	}
 
-	if err := json.Unmarshal(body, &yapiResp); err != nil {
-		return nil, fmt.Errorf("failed to parse response: %w", err)
+	if len(allInterfaces) == 0 {
+		return nil, fmt.Errorf("no interfaces found, please check your YAPI configuration and token permissions")
 	}
 
-	if yapiResp.Errcode != 0 {
-		return nil, fmt.Errorf("YAPI error: %s", yapiResp.ErrMsg)
-	}
-
-	return yapiResp.Data.List, nil
+	return allInterfaces, nil
 }
 
 // GetCategories fetches all categories from a YAPI project
