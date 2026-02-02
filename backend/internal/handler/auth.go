@@ -50,7 +50,7 @@ func (h *Handler) Register(c *gin.Context) {
 	user := &model.User{
 		Email:    req.Email,
 		Password: string(hashedPassword),
-		Name:     req.Username,
+		Username: req.Username,
 	}
 
 	if err := h.store.CreateUser(user); err != nil {
@@ -60,7 +60,7 @@ func (h *Handler) Register(c *gin.Context) {
 	}
 
 	// Generate token
-	token, err := auth.GenerateToken(user.ID, user.Name, h.cfg.JWT.Secret, h.cfg.JWT.Expiration)
+	token, err := auth.GenerateToken(user.ID, user.Username, h.cfg.JWT.Secret, h.cfg.JWT.Expiration)
 	if err != nil {
 		response.Error(c, 500, "Failed to generate token")
 		return
@@ -96,7 +96,7 @@ func (h *Handler) Login(c *gin.Context) {
 	}
 
 	// Generate token
-	token, err := auth.GenerateToken(user.ID, user.Name, h.cfg.JWT.Secret, h.cfg.JWT.Expiration)
+	token, err := auth.GenerateToken(user.ID, user.Username, h.cfg.JWT.Secret, h.cfg.JWT.Expiration)
 	if err != nil {
 		response.Error(c, 500, "Failed to generate token")
 		return

@@ -30,7 +30,7 @@ func NewMemoryStore() *MemoryStore {
 		ID:        "demo-user-1",
 		Email:     "demo@example.com",
 		Password:  "$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5GyYzpLaEmcQK", // bcrypt of "demo123"
-		Name:      "Demo User",
+		Username:  "Demo User",
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}

@@ -241,12 +241,23 @@ func (s *DatabaseStore) CreateEndpoint(endpoint *model.Endpoint) error {
 	}
 
 	headersJSON, _ := json.Marshal(endpoint.Headers)
+	requestParamsJSON, _ := json.Marshal(endpoint.RequestParams)
+	requestBodyJSON, _ := json.Marshal(endpoint.RequestBody)
+	responseParamsJSON, _ := json.Marshal(endpoint.ResponseParams)
+	responseBodyJSON, _ := json.Marshal(endpoint.ResponseBody)
 
-	query := `INSERT INTO endpoints (id, collection_id, name, method, url, headers, body, description) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id, collection_id, name, method, url, headers, body, description, sort_order, created_at, updated_at`
+	query := `INSERT INTO endpoints (id, collection_id, name, method, url, headers, body, description, request_params, request_body, response_params, response_body) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING id, collection_id, name, method, url, headers, body, description, sort_order, request_params, request_body, response_params, response_body, created_at, updated_at`
 
-	var headersJSONB, bodyStr []byte
-	err := s.db.QueryRow(ctx, query, endpoint.ID, endpoint.CollectionID, endpoint.Name, endpoint.Method, endpoint.URL, headersJSON, endpoint.Body, endpoint.Description).Scan(
-		&endpoint.ID, &endpoint.CollectionID, &endpoint.Name, &endpoint.Method, &endpoint.URL, &headersJSONB, &bodyStr, &endpoint.Description, &endpoint.SortOrder, &endpoint.CreatedAt, &endpoint.UpdatedAt,
+	var headersJSONB, bodyStr, requestParamsJSONB, requestBodyJSONB, responseParamsJSONB, responseBodyJSONB []byte
+	err := s.db.QueryRow(ctx, query,
+		endpoint.ID, endpoint.CollectionID, endpoint.Name, endpoint.Method, endpoint.URL,
+		headersJSON, endpoint.Body, endpoint.Description,
+		requestParamsJSON, requestBodyJSON, responseParamsJSON, responseBodyJSON,
+	).Scan(
+		&endpoint.ID, &endpoint.CollectionID, &endpoint.Name, &endpoint.Method, &endpoint.URL,
+		&headersJSONB, &bodyStr, &endpoint.Description, &endpoint.SortOrder,
+		&requestParamsJSONB, &requestBodyJSONB, &responseParamsJSONB, &responseBodyJSONB,
+		&endpoint.CreatedAt, &endpoint.UpdatedAt,
 	)
 
 	if err != nil {
@@ -256,13 +267,25 @@ func (s *DatabaseStore) CreateEndpoint(endpoint *model.Endpoint) error {
 	if len(headersJSONB) > 0 {
 		json.Unmarshal(headersJSONB, &endpoint.Headers)
 	}
+	if len(requestParamsJSONB) > 0 {
+		json.Unmarshal(requestParamsJSONB, &endpoint.RequestParams)
+	}
+	if len(requestBodyJSONB) > 0 {
+		json.Unmarshal(requestBodyJSONB, &endpoint.RequestBody)
+	}
+	if len(responseParamsJSONB) > 0 {
+		json.Unmarshal(responseParamsJSONB, &endpoint.ResponseParams)
+	}
+	if len(responseBodyJSONB) > 0 {
+		json.Unmarshal(responseBodyJSONB, &endpoint.ResponseBody)
+	}
 
 	return nil
 }
 
 func (s *DatabaseStore) GetEndpointsByCollectionID(collectionID string) ([]model.Endpoint, error) {
 	ctx := context.Background()
-	query := `SELECT id, collection_id, name, method, url, headers, body, description, sort_order, created_at, updated_at FROM endpoints WHERE collection_id = $1 ORDER BY sort_order ASC`
+	query := `SELECT id, collection_id, name, method, url, headers, body, description, sort_order, request_params, request_body, response_params, response_body, created_at, updated_at FROM endpoints WHERE collection_id = $1 ORDER BY sort_order ASC`
 
 	rows, err := s.db.Query(ctx, query, collectionID)
 	if err != nil {
@@ -273,8 +296,13 @@ func (s *DatabaseStore) GetEndpointsByCollectionID(collectionID string) ([]model
 	var endpoints []model.Endpoint
 	for rows.Next() {
 		var e model.Endpoint
-		var headersJSON, bodyJSON []byte
-		err := rows.Scan(&e.ID, &e.CollectionID, &e.Name, &e.Method, &e.URL, &headersJSON, &bodyJSON, &e.Description, &e.SortOrder, &e.CreatedAt, &e.UpdatedAt)
+		var headersJSON, bodyJSON, requestParamsJSON, requestBodyJSON, responseParamsJSON, responseBodyJSON []byte
+		err := rows.Scan(
+			&e.ID, &e.CollectionID, &e.Name, &e.Method, &e.URL,
+			&headersJSON, &bodyJSON, &e.Description, &e.SortOrder,
+			&requestParamsJSON, &requestBodyJSON, &responseParamsJSON, &responseBodyJSON,
+			&e.CreatedAt, &e.UpdatedAt,
+		)
 		if err != nil {
 			return nil, err
 		}
@@ -286,6 +314,18 @@ func (s *DatabaseStore) GetEndpointsByCollectionID(collectionID string) ([]model
 			bodyStr := string(bodyJSON)
 			e.Body = &bodyStr
 		}
+		if len(requestParamsJSON) > 0 {
+			json.Unmarshal(requestParamsJSON, &e.RequestParams)
+		}
+		if len(requestBodyJSON) > 0 {
+			json.Unmarshal(requestBodyJSON, &e.RequestBody)
+		}
+		if len(responseParamsJSON) > 0 {
+			json.Unmarshal(responseParamsJSON, &e.ResponseParams)
+		}
+		if len(responseBodyJSON) > 0 {
+			json.Unmarshal(responseBodyJSON, &e.ResponseBody)
+		}
 
 		endpoints = append(endpoints, e)
 	}
@@ -295,12 +335,15 @@ func (s *DatabaseStore) GetEndpointsByCollectionID(collectionID string) ([]model
 
 func (s *DatabaseStore) GetEndpointByID(id string) (*model.Endpoint, error) {
 	ctx := context.Background()
-	query := `SELECT id, collection_id, name, method, url, headers, body, description, sort_order, created_at, updated_at FROM endpoints WHERE id = $1`
+	query := `SELECT id, collection_id, name, method, url, headers, body, description, sort_order, request_params, request_body, response_params, response_body, created_at, updated_at FROM endpoints WHERE id = $1`
 
 	var endpoint model.Endpoint
-	var headersJSON, bodyJSON []byte
+	var headersJSON, bodyJSON, requestParamsJSON, requestBodyJSON, responseParamsJSON, responseBodyJSON []byte
 	err := s.db.QueryRow(ctx, query, id).Scan(
-		&endpoint.ID, &endpoint.CollectionID, &endpoint.Name, &endpoint.Method, &endpoint.URL, &headersJSON, &bodyJSON, &endpoint.Description, &endpoint.SortOrder, &endpoint.CreatedAt, &endpoint.UpdatedAt,
+		&endpoint.ID, &endpoint.CollectionID, &endpoint.Name, &endpoint.Method, &endpoint.URL,
+		&headersJSON, &bodyJSON, &endpoint.Description, &endpoint.SortOrder,
+		&requestParamsJSON, &requestBodyJSON, &responseParamsJSON, &responseBodyJSON,
+		&endpoint.CreatedAt, &endpoint.UpdatedAt,
 	)
 
 	if err != nil {
@@ -317,6 +360,18 @@ func (s *DatabaseStore) GetEndpointByID(id string) (*model.Endpoint, error) {
 		bodyStr := string(bodyJSON)
 		endpoint.Body = &bodyStr
 	}
+	if len(requestParamsJSON) > 0 {
+		json.Unmarshal(requestParamsJSON, &endpoint.RequestParams)
+	}
+	if len(requestBodyJSON) > 0 {
+		json.Unmarshal(requestBodyJSON, &endpoint.RequestBody)
+	}
+	if len(responseParamsJSON) > 0 {
+		json.Unmarshal(responseParamsJSON, &endpoint.ResponseParams)
+	}
+	if len(responseBodyJSON) > 0 {
+		json.Unmarshal(responseBodyJSON, &endpoint.ResponseBody)
+	}
 
 	return &endpoint, nil
 }
@@ -325,9 +380,17 @@ func (s *DatabaseStore) UpdateEndpoint(endpoint *model.Endpoint) error {
 	ctx := context.Background()
 
 	headersJSON, _ := json.Marshal(endpoint.Headers)
-	query := `UPDATE endpoints SET name = $1, method = $2, url = $3, headers = $4, body = $5, description = $6 WHERE id = $7`
+	requestParamsJSON, _ := json.Marshal(endpoint.RequestParams)
+	requestBodyJSON, _ := json.Marshal(endpoint.RequestBody)
+	responseParamsJSON, _ := json.Marshal(endpoint.ResponseParams)
+	responseBodyJSON, _ := json.Marshal(endpoint.ResponseBody)
 
-	_, err := s.db.Exec(ctx, query, endpoint.Name, endpoint.Method, endpoint.URL, headersJSON, endpoint.Body, endpoint.Description, endpoint.ID)
+	query := `UPDATE endpoints SET name = $1, method = $2, url = $3, headers = $4, body = $5, description = $6, request_params = $7, request_body = $8, response_params = $9, response_body = $10 WHERE id = $11`
+
+	_, err := s.db.Exec(ctx, query,
+		endpoint.Name, endpoint.Method, endpoint.URL, headersJSON, endpoint.Body, endpoint.Description,
+		requestParamsJSON, requestBodyJSON, responseParamsJSON, responseBodyJSON,
+		endpoint.ID)
 	return err
 }
 

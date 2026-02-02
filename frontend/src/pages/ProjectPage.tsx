@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerClose } from '@/components/ui/drawer'
 import { projectsApi, collectionsApi, endpointsApi, environmentsApi } from '@/lib/api'
 import { useProjectStore } from '@/store/project'
-import { ArrowLeft, Plus, Folder, Trash2, Play, RefreshCw, X, FileText } from 'lucide-react'
+import { ArrowLeft, Plus, Folder, Trash2, Play, RefreshCw, X } from 'lucide-react'
 import RequestPanel from '@/components/RequestPanel'
 import ResponseViewer from '@/components/ResponseViewer'
 import EnvironmentSelector from '@/components/EnvironmentSelector'
@@ -512,7 +512,7 @@ export default function ProjectPage() {
               <DrawerHeader>
                 <div className="flex items-center justify-between">
                   <DrawerTitle>接口文档</DrawerTitle>
-                  <DrawerClose>
+                  <DrawerClose asChild>
                     <Button variant="ghost" size="icon">
                       <X className="w-4 h-4" />
                     </Button>
