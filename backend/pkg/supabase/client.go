@@ -3,7 +3,8 @@ package supabase
 import (
 	"fmt"
 	"os"
-	"github.com/supabase/supabase-go"
+
+	"github.com/supabase-community/supabase-go"
 )
 
 // Client holds the Supabase client instance

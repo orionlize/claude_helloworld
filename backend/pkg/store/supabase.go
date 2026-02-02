@@ -4,10 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"os"
 
-	"github.com/supabase/supabase-go"
-	"api-management-system/internal/model"
+	"github.com/supabase-community/supabase-go"
+	"apihub/internal/model"
 )
 
 // SupabaseStore implements storage operations using Supabase
@@ -259,6 +258,6 @@ func (s *SupabaseStore) DeleteEnvironment(ctx context.Context, id string) error 
 // Health check
 func (s *SupabaseStore) Ping(ctx context.Context) error {
 	// Simple query to check connection
-	_, _, err := s.client.From("users").Select("count", "", false).Limit(1).Execute()
+	_, _, err := s.client.From("users").Select("count", "", false).Limit(1, "").Execute()
 	return err
 }
