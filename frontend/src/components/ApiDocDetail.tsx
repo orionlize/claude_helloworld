@@ -287,7 +287,7 @@ export default function ApiDocDetail({ endpoint }: ApiDocDetailProps) {
                   <h4 className="text-sm font-semibold text-gray-700 px-1">参数列表</h4>
                   <Card>
                     <CardContent className="p-0">
-                      <div className="py-2">{renderParamTree(endpoint.request_params)}</div>
+                      <div className="py-2">{renderParamTree(endpoint.request_params || [])}</div>
                     </CardContent>
                   </Card>
                 </div>
@@ -338,7 +338,7 @@ export default function ApiDocDetail({ endpoint }: ApiDocDetailProps) {
                   <h4 className="text-sm font-semibold text-gray-700 px-1">响应字段</h4>
                   <Card>
                     <CardContent className="p-0">
-                      <div className="py-2">{renderParamTree(endpoint.response_params)}</div>
+                      <div className="py-2">{renderParamTree(endpoint.response_params || [])}</div>
                     </CardContent>
                   </Card>
                 </div>

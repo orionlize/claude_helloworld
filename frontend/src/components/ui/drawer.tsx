@@ -5,7 +5,6 @@ interface DrawerProps {
   open?: boolean
   onOpenChange?: (open: boolean) => void
   children: React.ReactNode
-  className?: string
 }
 
 interface DrawerContextValue {
@@ -15,7 +14,7 @@ interface DrawerContextValue {
 
 const DrawerContext = React.createContext<DrawerContextValue | undefined>(undefined)
 
-const Drawer = ({ open = false, onOpenChange, children, className }: DrawerProps) => {
+const Drawer = ({ open = false, onOpenChange, children }: DrawerProps) => {
   return (
     <DrawerContext.Provider value={{ open, onOpenChange: onOpenChange || (() => {}) }}>
       {children}
@@ -109,12 +108,15 @@ const DrawerFooter = ({ children, className }: { children: React.ReactNode; clas
   )
 }
 
-const DrawerClose = ({ children, ...props }: React.ButtonHTMLAttributes<HTMLButtonElement>) => {
+const DrawerClose = ({ children, onClick, ...props }: React.ButtonHTMLAttributes<HTMLButtonElement>) => {
   const { onOpenChange } = React.useContext(DrawerContext)!
 
   return (
     <button
-      onClick={() => onOpenChange(false)}
+      onClick={(e) => {
+        onOpenChange(false)
+        if (onClick) onClick(e)
+      }}
       {...props}
     >
       {children}
