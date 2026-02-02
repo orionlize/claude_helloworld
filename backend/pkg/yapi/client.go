@@ -39,6 +39,13 @@ func NewClient(baseURL, token string) *Client {
 
 // GetInterfaces fetches all interfaces from a YAPI project with pagination support
 func (c *Client) GetInterfaces(projectID int) ([]model.YAPIInterface, error) {
+	// Try the category-based approach first (more reliable for YAPI)
+	interfaces, err := c.getInterfacesByCategory(projectID)
+	if err == nil && len(interfaces) > 0 {
+		return interfaces, nil
+	}
+
+	// Fallback to get_list with pagination
 	var allInterfaces []model.YAPIInterface
 	page := 1
 	limit := 100 // YAPI default limit per page
@@ -48,7 +55,8 @@ func (c *Client) GetInterfaces(projectID int) ([]model.YAPIInterface, error) {
 
 		resp, err := c.HTTPClient.Get(url)
 		if err != nil {
-			return nil, fmt.Errorf("failed to fetch interfaces (page %d): %w", page, err)
+			// If get_list also fails, return the error from category method
+			return nil, fmt.Errorf("failed to fetch interfaces: %w", err)
 		}
 		defer resp.Body.Close()
 
@@ -67,7 +75,8 @@ func (c *Client) GetInterfaces(projectID int) ([]model.YAPIInterface, error) {
 		}
 
 		if err := json.Unmarshal(body, &yapiResp); err != nil {
-			return nil, fmt.Errorf("failed to parse response: %w", err)
+			// Try category method as fallback
+			return c.getInterfacesByCategory(projectID)
 		}
 
 		if yapiResp.Errcode != 0 {
@@ -104,25 +113,29 @@ func (c *Client) getInterfacesByCategory(projectID int) ([]model.YAPIInterface, 
 		if err != nil {
 			continue
 		}
-		defer resp.Body.Close()
 
 		body, err := io.ReadAll(resp.Body)
+		resp.Body.Close()
 		if err != nil {
 			continue
 		}
 
+		// YAPI list_cat returns: { "errcode": 0, "data": { "list": [...], "count": N, "total": M } }
 		var yapiResp struct {
-			Errcode int                  `json:"errcode"`
-			ErrMsg  string               `json:"errmsg"`
-			Data    []model.YAPIInterface `json:"data"`
+			Errcode int `json:"errcode"`
+			ErrMsg  string `json:"errmsg"`
+			Data    struct {
+				List []model.YAPIInterface `json:"list"`
+				Count int                  `json:"count"`
+			} `json:"data"`
 		}
 
 		if err := json.Unmarshal(body, &yapiResp); err != nil {
 			continue
 		}
 
-		if yapiResp.Errcode == 0 {
-			allInterfaces = append(allInterfaces, yapiResp.Data...)
+		if yapiResp.Errcode == 0 && len(yapiResp.Data.List) > 0 {
+			allInterfaces = append(allInterfaces, yapiResp.Data.List...)
 		}
 	}
 
