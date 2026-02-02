@@ -4,13 +4,15 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerClose } from '@/components/ui/drawer'
 import { projectsApi, collectionsApi, endpointsApi, environmentsApi } from '@/lib/api'
 import { useProjectStore } from '@/store/project'
-import { ArrowLeft, Plus, Folder, Trash2, Play, FileText, RefreshCw } from 'lucide-react'
+import { ArrowLeft, Plus, Folder, Trash2, Play, RefreshCw, X } from 'lucide-react'
 import RequestPanel from '@/components/RequestPanel'
 import ResponseViewer from '@/components/ResponseViewer'
 import EnvironmentSelector from '@/components/EnvironmentSelector'
 import YAPISyncDialog from '@/components/YAPISyncDialog'
+import ApiDocDetail from '@/components/ApiDocDetail'
 import type { Environment } from '@/types'
 
 type TabType = 'endpoints' | 'test'
@@ -35,6 +37,8 @@ export default function ProjectPage() {
   const [selectedEnvironment, setSelectedEnvironmentState] = useState<Environment>()
   const [showEndpointForm, setShowEndpointForm] = useState(false)
   const [showYAPIDialog, setShowYAPIDialog] = useState(false)
+  const [showApiDocDrawer, setShowApiDocDrawer] = useState(false)
+  const [selectedEndpointForDocs, setSelectedEndpointForDocs] = useState<any>(null)
   const [endpointForm, setEndpointForm] = useState({
     name: '',
     method: 'GET',
@@ -166,6 +170,11 @@ export default function ProjectPage() {
     )
     // Trigger event for RequestPanel to pick up
     window.dispatchEvent(new CustomEvent('test-request-ready'))
+  }
+
+  const handleViewApiDoc = (endpoint: any) => {
+    setSelectedEndpointForDocs(endpoint)
+    setShowApiDocDrawer(true)
   }
 
   const getMethodColor = (method: string) => {
@@ -422,7 +431,11 @@ export default function ProjectPage() {
                         </Card>
                       ) : (
                         endpoints.map((endpoint) => (
-                          <Card key={endpoint.id}>
+                          <Card
+                            key={endpoint.id}
+                            className="cursor-pointer hover:shadow-md transition-shadow"
+                            onClick={() => handleViewApiDoc(endpoint)}
+                          >
                             <CardContent className="p-4">
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3 flex-1">
@@ -438,7 +451,7 @@ export default function ProjectPage() {
                                     <div className="text-sm text-gray-500">{endpoint.url}</div>
                                   </div>
                                 </div>
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                                   <Button
                                     size="sm"
                                     variant="outline"
@@ -490,6 +503,29 @@ export default function ProjectPage() {
           </div>
         </div>
       </main>
+
+      {/* API Documentation Drawer */}
+      <Drawer open={showApiDocDrawer} onOpenChange={setShowApiDocDrawer}>
+        <DrawerContent>
+          {selectedEndpointForDocs && (
+            <>
+              <DrawerHeader>
+                <div className="flex items-center justify-between">
+                  <DrawerTitle>接口文档</DrawerTitle>
+                  <DrawerClose asChild>
+                    <Button variant="ghost" size="icon">
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </DrawerClose>
+                </div>
+              </DrawerHeader>
+              <div className="overflow-y-auto h-full pb-20">
+                <ApiDocDetail endpoint={selectedEndpointForDocs} />
+              </div>
+            </>
+          )}
+        </DrawerContent>
+      </Drawer>
     </div>
   )
 }
