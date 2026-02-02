@@ -186,7 +186,7 @@ type YAPIResponse struct {
 }
 
 type YAPISyncConfig struct {
-	ProjectID    string `json:"project_id" binding:"required"`
+	ProjectID    string `json:"-"`                                      // Set from URL param, not from request body
 	YAPIUrl      string `json:"yapi_url" binding:"required"`      // e.g., http://yapi.example.com
 	YAPIToken    string `json:"yapi_token" binding:"required"`    // YAPI project token
 	YAPIProjectID int   `json:"yapi_project_id" binding:"required"` // YAPI project ID
