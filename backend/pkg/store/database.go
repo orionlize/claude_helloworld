@@ -266,15 +266,21 @@ func (s *DatabaseStore) CreateEndpoint(endpoint *model.Endpoint) error {
 
 	if len(headersJSONB) > 0 {
 		json.Unmarshal(headersJSONB, &endpoint.Headers)
+	} else {
+		endpoint.Headers = make(map[string]string)
 	}
 	if len(requestParamsJSONB) > 0 {
 		json.Unmarshal(requestParamsJSONB, &endpoint.RequestParams)
+	} else {
+		endpoint.RequestParams = []model.APIParam{}
 	}
 	if len(requestBodyJSONB) > 0 {
 		json.Unmarshal(requestBodyJSONB, &endpoint.RequestBody)
 	}
 	if len(responseParamsJSONB) > 0 {
 		json.Unmarshal(responseParamsJSONB, &endpoint.ResponseParams)
+	} else {
+		endpoint.ResponseParams = []model.APIParam{}
 	}
 	if len(responseBodyJSONB) > 0 {
 		json.Unmarshal(responseBodyJSONB, &endpoint.ResponseBody)
@@ -309,6 +315,8 @@ func (s *DatabaseStore) GetEndpointsByCollectionID(collectionID string) ([]model
 
 		if len(headersJSON) > 0 {
 			json.Unmarshal(headersJSON, &e.Headers)
+		} else {
+			e.Headers = make(map[string]string)
 		}
 		if len(bodyJSON) > 0 {
 			bodyStr := string(bodyJSON)
@@ -316,12 +324,16 @@ func (s *DatabaseStore) GetEndpointsByCollectionID(collectionID string) ([]model
 		}
 		if len(requestParamsJSON) > 0 {
 			json.Unmarshal(requestParamsJSON, &e.RequestParams)
+		} else {
+			e.RequestParams = []model.APIParam{}
 		}
 		if len(requestBodyJSON) > 0 {
 			json.Unmarshal(requestBodyJSON, &e.RequestBody)
 		}
 		if len(responseParamsJSON) > 0 {
 			json.Unmarshal(responseParamsJSON, &e.ResponseParams)
+		} else {
+			e.ResponseParams = []model.APIParam{}
 		}
 		if len(responseBodyJSON) > 0 {
 			json.Unmarshal(responseBodyJSON, &e.ResponseBody)
@@ -355,6 +367,8 @@ func (s *DatabaseStore) GetEndpointByID(id string) (*model.Endpoint, error) {
 
 	if len(headersJSON) > 0 {
 		json.Unmarshal(headersJSON, &endpoint.Headers)
+	} else {
+		endpoint.Headers = make(map[string]string)
 	}
 	if len(bodyJSON) > 0 {
 		bodyStr := string(bodyJSON)
@@ -362,12 +376,16 @@ func (s *DatabaseStore) GetEndpointByID(id string) (*model.Endpoint, error) {
 	}
 	if len(requestParamsJSON) > 0 {
 		json.Unmarshal(requestParamsJSON, &endpoint.RequestParams)
+	} else {
+		endpoint.RequestParams = []model.APIParam{}
 	}
 	if len(requestBodyJSON) > 0 {
 		json.Unmarshal(requestBodyJSON, &endpoint.RequestBody)
 	}
 	if len(responseParamsJSON) > 0 {
 		json.Unmarshal(responseParamsJSON, &endpoint.ResponseParams)
+	} else {
+		endpoint.ResponseParams = []model.APIParam{}
 	}
 	if len(responseBodyJSON) > 0 {
 		json.Unmarshal(responseBodyJSON, &endpoint.ResponseBody)

@@ -205,6 +205,18 @@ func (s *MemoryStore) CreateEndpoint(endpoint *model.Endpoint) error {
 	}
 	endpoint.CreatedAt = time.Now()
 	endpoint.UpdatedAt = time.Now()
+
+	// Initialize slices if nil
+	if endpoint.Headers == nil {
+		endpoint.Headers = make(map[string]string)
+	}
+	if endpoint.RequestParams == nil {
+		endpoint.RequestParams = []model.APIParam{}
+	}
+	if endpoint.ResponseParams == nil {
+		endpoint.ResponseParams = []model.APIParam{}
+	}
+
 	s.endpoints[endpoint.ID] = endpoint
 	return nil
 }
@@ -216,6 +228,16 @@ func (s *MemoryStore) GetEndpointsByCollectionID(collectionID string) ([]model.E
 	var endpoints []model.Endpoint
 	for _, endpoint := range s.endpoints {
 		if endpoint.CollectionID == collectionID {
+			// Ensure slices are initialized
+			if endpoint.Headers == nil {
+				endpoint.Headers = make(map[string]string)
+			}
+			if endpoint.RequestParams == nil {
+				endpoint.RequestParams = []model.APIParam{}
+			}
+			if endpoint.ResponseParams == nil {
+				endpoint.ResponseParams = []model.APIParam{}
+			}
 			endpoints = append(endpoints, *endpoint)
 		}
 	}
