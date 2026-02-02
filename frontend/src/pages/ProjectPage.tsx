@@ -4,9 +4,15 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { projectsApi, collectionsApi, endpointsApi } from '@/lib/api'
+import { projectsApi, collectionsApi, endpointsApi, environmentsApi } from '@/lib/api'
 import { useProjectStore } from '@/store/project'
-import { ArrowLeft, Plus, Folder, File, Trash2, ChevronRight } from 'lucide-react'
+import { ArrowLeft, Plus, Folder, Trash2, Play, FileText } from 'lucide-react'
+import RequestPanel from '@/components/RequestPanel'
+import ResponseViewer from '@/components/ResponseViewer'
+import EnvironmentSelector from '@/components/EnvironmentSelector'
+import type { Environment } from '@/types'
+
+type TabType = 'endpoints' | 'test'
 
 export default function ProjectPage() {
   const { id } = useParams()
@@ -20,9 +26,12 @@ export default function ProjectPage() {
     setCollections,
     setEndpoints,
     setSelectedCollection,
+    setSelectedEndpoint,
   } = useProjectStore()
 
   const [isLoading, setIsLoading] = useState(true)
+  const [activeTab, setActiveTab] = useState<TabType>('endpoints')
+  const [selectedEnvironment, setSelectedEnvironmentState] = useState<Environment>()
   const [showEndpointForm, setShowEndpointForm] = useState(false)
   const [endpointForm, setEndpointForm] = useState({
     name: '',
@@ -35,6 +44,7 @@ export default function ProjectPage() {
   useEffect(() => {
     loadProject()
     loadCollections()
+    loadEnvironments()
   }, [id])
 
   const loadProject = async () => {
@@ -69,6 +79,21 @@ export default function ProjectPage() {
       }
     } catch (error) {
       console.error('Failed to load endpoints:', error)
+    }
+  }
+
+  const loadEnvironments = async () => {
+    try {
+      const response = await environmentsApi.list(id!)
+      if (response.data.success) {
+        const envs = response.data.data || []
+        const defaultEnv = envs.find((e: Environment) => e.is_default)
+        if (defaultEnv) {
+          setSelectedEnvironmentState(defaultEnv)
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load environments:', error)
     }
   }
 
@@ -124,6 +149,23 @@ export default function ProjectPage() {
     }
   }
 
+  const handleTestFromEndpoint = (endpoint: any) => {
+    setSelectedEndpoint(endpoint.id)
+    setActiveTab('test')
+    // Pre-fill the request panel
+    sessionStorage.setItem(
+      'testRequest',
+      JSON.stringify({
+        method: endpoint.method,
+        url: endpoint.url,
+        headers: endpoint.headers || {},
+        body: endpoint.body || '',
+      })
+    )
+    // Trigger event for RequestPanel to pick up
+    window.dispatchEvent(new CustomEvent('test-request-ready'))
+  }
+
   const getMethodColor = (method: string) => {
     const colors: Record<string, string> = {
       GET: 'bg-blue-100 text-blue-700',
@@ -152,13 +194,18 @@ export default function ProjectPage() {
               <p className="text-sm text-gray-600">{currentProject?.description}</p>
             </div>
           </div>
+          <Button variant="outline" onClick={() => navigate(`/project/${id}/docs`)}>
+            <FileText className="w-4 h-4 mr-2" />
+            View Docs
+          </Button>
         </div>
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-12 gap-6">
-          {/* Sidebar - Collections */}
-          <div className="col-span-4">
+          {/* Left Sidebar - Collections */}
+          <div className="col-span-3 space-y-4">
+            {/* Collections */}
             <Card>
               <CardHeader>
                 <div className="flex justify-between items-center">
@@ -170,9 +217,7 @@ export default function ProjectPage() {
               </CardHeader>
               <CardContent className="p-0">
                 {collections.length === 0 ? (
-                  <div className="p-4 text-center text-gray-500 text-sm">
-                    No collections yet
-                  </div>
+                  <div className="p-4 text-center text-gray-500 text-sm">No collections yet</div>
                 ) : (
                   <div className="divide-y">
                     {collections.map((collection) => (
@@ -184,6 +229,7 @@ export default function ProjectPage() {
                         onClick={() => {
                           setSelectedCollection(collection.id)
                           loadEndpoints(collection.id)
+                          setActiveTab('endpoints')
                         }}
                       >
                         <div className="flex items-center gap-2 flex-1">
@@ -191,7 +237,6 @@ export default function ProjectPage() {
                           <span className="text-sm font-medium">{collection.name}</span>
                         </div>
                         <div className="flex items-center gap-1">
-                          <ChevronRight className="w-4 h-4 text-gray-400" />
                           <Button
                             variant="ghost"
                             size="icon"
@@ -210,10 +255,17 @@ export default function ProjectPage() {
                 )}
               </CardContent>
             </Card>
+
+            {/* Environment Selector */}
+            <EnvironmentSelector
+              projectId={id!}
+              selectedEnvironment={selectedEnvironment}
+              onEnvironmentChange={setSelectedEnvironmentState}
+            />
           </div>
 
-          {/* Main Content - Endpoints */}
-          <div className="col-span-8">
+          {/* Main Content */}
+          <div className="col-span-9">
             {!selectedCollection ? (
               <Card>
                 <CardContent className="py-12 text-center text-gray-500">
@@ -222,140 +274,198 @@ export default function ProjectPage() {
               </Card>
             ) : (
               <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <h2 className="text-xl font-semibold">Endpoints</h2>
-                  <Button size="sm" onClick={() => setShowEndpointForm(!showEndpointForm)}>
-                    <Plus className="w-4 h-4 mr-2" />
-                    New Endpoint
-                  </Button>
+                {/* Tabs */}
+                <div className="flex gap-2 border-b">
+                  <button
+                    className={`px-4 py-2 font-medium ${
+                      activeTab === 'endpoints'
+                        ? 'border-b-2 border-primary text-primary'
+                        : 'text-gray-500'
+                    }`}
+                    onClick={() => setActiveTab('endpoints')}
+                  >
+                    Endpoints
+                  </button>
+                  <button
+                    className={`px-4 py-2 font-medium flex items-center gap-2 ${
+                      activeTab === 'test'
+                        ? 'border-b-2 border-primary text-primary'
+                        : 'text-gray-500'
+                    }`}
+                    onClick={() => setActiveTab('test')}
+                  >
+                    <Play className="w-4 h-4" />
+                    API Test
+                  </button>
                 </div>
 
-                {showEndpointForm && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-lg">Create Endpoint</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <form onSubmit={handleCreateEndpoint} className="space-y-4">
-                        <div>
-                          <Label htmlFor="name">Name</Label>
-                          <Input
-                            id="name"
-                            value={endpointForm.name}
-                            onChange={(e) =>
-                              setEndpointForm({ ...endpointForm, name: e.target.value })
-                            }
-                            required
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="method">Method</Label>
-                          <select
-                            id="method"
-                            value={endpointForm.method}
-                            onChange={(e) =>
-                              setEndpointForm({ ...endpointForm, method: e.target.value })
-                            }
-                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2"
-                          >
-                            {['GET', 'POST', 'PUT', 'PATCH', 'DELETE'].map((method) => (
-                              <option key={method} value={method}>
-                                {method}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                        <div>
-                          <Label htmlFor="url">URL</Label>
-                          <Input
-                            id="url"
-                            placeholder="https://api.example.com/endpoint"
-                            value={endpointForm.url}
-                            onChange={(e) =>
-                              setEndpointForm({ ...endpointForm, url: e.target.value })
-                            }
-                            required
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="body">Body (JSON)</Label>
-                          <textarea
-                            id="body"
-                            rows={4}
-                            className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                            value={endpointForm.body}
-                            onChange={(e) =>
-                              setEndpointForm({ ...endpointForm, body: e.target.value })
-                            }
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="description">Description</Label>
-                          <Input
-                            id="description"
-                            value={endpointForm.description}
-                            onChange={(e) =>
-                              setEndpointForm({ ...endpointForm, description: e.target.value })
-                            }
-                          />
-                        </div>
-                        <div className="flex gap-2">
-                          <Button type="submit">Create</Button>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => setShowEndpointForm(false)}
-                          >
-                            Cancel
-                          </Button>
-                        </div>
-                      </form>
-                    </CardContent>
-                  </Card>
-                )}
+                {/* Endpoints Tab */}
+                {activeTab === 'endpoints' && (
+                  <>
+                    <div className="flex justify-between items-center">
+                      <h2 className="text-xl font-semibold">Endpoints</h2>
+                      <Button size="sm" onClick={() => setShowEndpointForm(!showEndpointForm)}>
+                        <Plus className="w-4 h-4 mr-2" />
+                        New Endpoint
+                      </Button>
+                    </div>
 
-                <div className="space-y-2">
-                  {endpoints.length === 0 ? (
-                    <Card>
-                      <CardContent className="py-8 text-center text-gray-500">
-                        No endpoints in this collection
-                      </CardContent>
-                    </Card>
-                  ) : (
-                    endpoints.map((endpoint) => (
-                      <Card key={endpoint.id}>
-                        <CardContent className="p-4">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3 flex-1">
-                              <span
-                                className={`px-2 py-1 text-xs font-bold rounded ${getMethodColor(
-                                  endpoint.method
-                                )}`}
-                              >
-                                {endpoint.method}
-                              </span>
-                              <div className="flex-1">
-                                <div className="font-medium">{endpoint.name}</div>
-                                <div className="text-sm text-gray-500">{endpoint.url}</div>
-                              </div>
+                    {showEndpointForm && (
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="text-lg">Create Endpoint</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <form onSubmit={handleCreateEndpoint} className="space-y-4">
+                            <div>
+                              <Label htmlFor="name">Name</Label>
+                              <Input
+                                id="name"
+                                value={endpointForm.name}
+                                onChange={(e) =>
+                                  setEndpointForm({ ...endpointForm, name: e.target.value })
+                                }
+                                required
+                              />
                             </div>
-                            <div className="flex items-center gap-2">
-                              <File className="w-4 h-4 text-gray-400" />
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8"
-                                onClick={() => handleDeleteEndpoint(endpoint.id)}
+                            <div>
+                              <Label htmlFor="method">Method</Label>
+                              <select
+                                id="method"
+                                value={endpointForm.method}
+                                onChange={(e) =>
+                                  setEndpointForm({ ...endpointForm, method: e.target.value })
+                                }
+                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2"
                               >
-                                <Trash2 className="w-4 h-4 text-destructive" />
+                                {['GET', 'POST', 'PUT', 'PATCH', 'DELETE'].map((method) => (
+                                  <option key={method} value={method}>
+                                    {method}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                            <div>
+                              <Label htmlFor="url">URL</Label>
+                              <Input
+                                id="url"
+                                placeholder="https://api.example.com/endpoint"
+                                value={endpointForm.url}
+                                onChange={(e) =>
+                                  setEndpointForm({ ...endpointForm, url: e.target.value })
+                                }
+                                required
+                              />
+                            </div>
+                            <div>
+                              <Label htmlFor="body">Body (JSON)</Label>
+                              <textarea
+                                id="body"
+                                rows={4}
+                                className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                value={endpointForm.body}
+                                onChange={(e) =>
+                                  setEndpointForm({ ...endpointForm, body: e.target.value })
+                                }
+                              />
+                            </div>
+                            <div>
+                              <Label htmlFor="description">Description</Label>
+                              <Input
+                                id="description"
+                                value={endpointForm.description}
+                                onChange={(e) =>
+                                  setEndpointForm({ ...endpointForm, description: e.target.value })
+                                }
+                              />
+                            </div>
+                            <div className="flex gap-2">
+                              <Button type="submit">Create</Button>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => setShowEndpointForm(false)}
+                              >
+                                Cancel
                               </Button>
                             </div>
-                          </div>
+                          </form>
                         </CardContent>
                       </Card>
-                    ))
-                  )}
-                </div>
+                    )}
+
+                    <div className="space-y-2">
+                      {endpoints.length === 0 ? (
+                        <Card>
+                          <CardContent className="py-8 text-center text-gray-500">
+                            No endpoints in this collection
+                          </CardContent>
+                        </Card>
+                      ) : (
+                        endpoints.map((endpoint) => (
+                          <Card key={endpoint.id}>
+                            <CardContent className="p-4">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3 flex-1">
+                                  <span
+                                    className={`px-2 py-1 text-xs font-bold rounded ${getMethodColor(
+                                      endpoint.method
+                                    )}`}
+                                  >
+                                    {endpoint.method}
+                                  </span>
+                                  <div className="flex-1">
+                                    <div className="font-medium">{endpoint.name}</div>
+                                    <div className="text-sm text-gray-500">{endpoint.url}</div>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => handleTestFromEndpoint(endpoint)}
+                                  >
+                                    <Play className="w-3 h-3 mr-1" />
+                                    Test
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8"
+                                    onClick={() => handleDeleteEndpoint(endpoint.id)}
+                                  >
+                                    <Trash2 className="w-4 h-4 text-destructive" />
+                                  </Button>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))
+                      )}
+                    </div>
+                  </>
+                )}
+
+                {/* API Test Tab */}
+                {activeTab === 'test' && (
+                  <div className="grid grid-cols-2 gap-6">
+                    {/* Request Panel */}
+                    <div>
+                      <RequestPanel
+                        environment={selectedEnvironment?.variables}
+                        onRequestSent={() => {
+                          // Trigger response update event
+                          window.dispatchEvent(new Event('response-updated'))
+                        }}
+                      />
+                    </div>
+
+                    {/* Response Viewer */}
+                    <div>
+                      <ResponseViewer />
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>

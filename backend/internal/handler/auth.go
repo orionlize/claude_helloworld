@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"fmt"
 	"time"
 
 	"apihub/internal/config"
@@ -90,17 +89,8 @@ func (h *Handler) Login(c *gin.Context) {
 		return
 	}
 
-	// Verify password
-	// For demo mode, also check plain text password
-	passwordMatch := false
-	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password)); err == nil {
-		passwordMatch = true
-	} else if user.Password == req.Password {
-		// Fallback to plain text comparison for demo
-		passwordMatch = true
-	}
-
-	if !passwordMatch {
+	// Verify password using bcrypt only
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password)); err != nil {
 		response.Error(c, 401, "Invalid credentials")
 		return
 	}
@@ -128,15 +118,8 @@ func (h *Handler) GetCurrentUser(c *gin.Context) {
 		return
 	}
 
-	// Convert string user_id to int64
-	var userID int64
-	if str, ok := userIDStr.(string); ok {
-		_, err := fmt.Sscanf(str, "%d", &userID)
-		if err != nil {
-			response.Error(c, 401, "Invalid user ID")
-			return
-		}
-	} else {
+	userID, ok := userIDStr.(string)
+	if !ok {
 		response.Error(c, 401, "Invalid user ID type")
 		return
 	}
@@ -154,5 +137,14 @@ func (h *Handler) GetCurrentUser(c *gin.Context) {
 }
 
 func generateUUID() string {
-	return fmt.Sprintf("%d", time.Now().UnixNano())
+	return time.Now().Format("20060102150405") + randomString(6)
+}
+
+func randomString(length int) string {
+	const charset = "abcdefghijklmnopqrstuvwxyz0123456789"
+	b := make([]byte, length)
+	for i := range b {
+		b[i] = charset[time.Now().UnixNano()%int64(len(charset))]
+	}
+	return string(b)
 }

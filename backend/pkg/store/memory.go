@@ -1,7 +1,6 @@
 package store
 
 import (
-	"fmt"
 	"sync"
 	"time"
 
@@ -9,37 +8,33 @@ import (
 )
 
 type MemoryStore struct {
-	users        map[int64]*model.User
+	users        map[string]*model.User
 	projects     map[string]*model.Project
 	collections  map[string]*model.Collection
 	endpoints    map[string]*model.Endpoint
 	environments map[string]*model.Environment
 	mu           sync.RWMutex
-
-	userIDCounter int64
 }
 
 func NewMemoryStore() *MemoryStore {
 	store := &MemoryStore{
-		users:        make(map[int64]*model.User),
+		users:        make(map[string]*model.User),
 		projects:     make(map[string]*model.Project),
 		collections:  make(map[string]*model.Collection),
 		endpoints:    make(map[string]*model.Endpoint),
 		environments: make(map[string]*model.Environment),
-		userIDCounter: 1,
 	}
 
 	// Create demo user (password: demo123)
-	// Using plain text for demo mode (login handler supports both bcrypt and plain text)
 	demoUser := &model.User{
-		ID:        1,
+		ID:        "demo-user-1",
 		Email:     "demo@example.com",
-		Password:  "demo123",
+		Password:  "$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5GyYzpLaEmcQK", // bcrypt of "demo123"
 		Name:      "Demo User",
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}
-	store.users[1] = demoUser
+	store.users[demoUser.ID] = demoUser
 
 	return store
 }
@@ -49,8 +44,9 @@ func (s *MemoryStore) CreateUser(user *model.User) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	user.ID = s.userIDCounter
-	s.userIDCounter++
+	if user.ID == "" {
+		user.ID = generateID()
+	}
 	user.CreatedAt = time.Now()
 	user.UpdatedAt = time.Now()
 	s.users[user.ID] = user
@@ -69,7 +65,7 @@ func (s *MemoryStore) GetUserByEmail(email string) (*model.User, error) {
 	return nil, nil
 }
 
-func (s *MemoryStore) GetUserByID(id int64) (*model.User, error) {
+func (s *MemoryStore) GetUserByID(id string) (*model.User, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
@@ -103,15 +99,13 @@ func (s *MemoryStore) CreateProject(project *model.Project) error {
 	return nil
 }
 
-func (s *MemoryStore) GetProjectsByUserID(userID int64) ([]model.Project, error) {
+func (s *MemoryStore) GetProjectsByUserID(userID string) ([]model.Project, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
 	var projects []model.Project
-	userIDStr := fmt.Sprintf("%d", userID)
 	for _, project := range s.projects {
-		// Compare userID as string
-		if project.UserID == userIDStr {
+		if project.UserID == userID {
 			projects = append(projects, *project)
 		}
 	}
@@ -309,17 +303,4 @@ func (s *MemoryStore) DeleteEnvironment(id string) error {
 
 	delete(s.environments, id)
 	return nil
-}
-
-func generateID() string {
-	return time.Now().Format("20060102150405") + randomString(6)
-}
-
-func randomString(length int) string {
-	const charset = "abcdefghijklmnopqrstuvwxyz0123456789"
-	b := make([]byte, length)
-	for i := range b {
-		b[i] = charset[time.Now().UnixNano()%int64(len(charset))]
-	}
-	return string(b)
 }

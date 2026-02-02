@@ -30,7 +30,6 @@ func main() {
 	// Initialize store based on DB mode
 	var db *pgxpool.Pool
 	var str store.Store
-	var dbErr error
 
 	if cfg.Database.Mode == "memory" {
 		logger.Info("Using in-memory store")
@@ -38,11 +37,13 @@ func main() {
 	} else {
 		logger.Info("Using PostgreSQL database")
 		// Connect to database
-		db, dbErr = database.Connect(cfg.Database)
-		if dbErr != nil {
-			log.Fatal("Failed to connect to database:", dbErr)
+		db, err = database.Connect(cfg.Database)
+		if err != nil {
+			log.Fatal("Failed to connect to database:", err)
 		}
 		defer db.Close()
+		// Use DatabaseStore instead of direct db access
+		str = store.NewDatabaseStore(db)
 	}
 
 	// Initialize Gin router
@@ -71,7 +72,7 @@ func main() {
 		c.JSON(200, gin.H{"status": "ok", "mode": cfg.Database.Mode})
 	})
 
-	// Initialize handlers
+	// Initialize handlers - pass db for SendRequest which needs direct HTTP client
 	h := handler.New(db, cfg, str)
 
 	// API routes
@@ -115,6 +116,13 @@ func main() {
 			protected.GET("/endpoints/:epid", h.GetEndpoint)
 			protected.PUT("/endpoints/:epid", h.UpdateEndpoint)
 			protected.DELETE("/endpoints/:epid", h.DeleteEndpoint)
+
+			// Test request - Send HTTP request for testing
+			protected.POST("/test/request", h.SendRequest)
+
+			// Documentation routes
+			protected.GET("/projects/:pid/docs", h.GenerateDocs)
+			protected.GET("/projects/:pid/docs/export", h.ExportPostman)
 
 			// Project detail routes (must be last)
 			protected.GET("/projects/:pid", h.GetProject)

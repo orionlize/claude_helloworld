@@ -7,12 +7,12 @@ type Store interface {
 	// User operations
 	CreateUser(user *model.User) error
 	GetUserByEmail(email string) (*model.User, error)
-	GetUserByID(id int64) (*model.User, error)
+	GetUserByID(id string) (*model.User, error)
 	UpdateUser(user *model.User) error
 
 	// Project operations
 	CreateProject(project *model.Project) error
-	GetProjectsByUserID(userID int64) ([]model.Project, error)
+	GetProjectsByUserID(userID string) ([]model.Project, error)
 	GetProjectByID(id string) (*model.Project, error)
 	UpdateProject(project *model.Project) error
 	DeleteProject(id string) error

@@ -5,6 +5,7 @@ import { useAuthStore } from './store/auth'
 import LoginPage from './pages/LoginPage'
 import DashboardPage from './pages/DashboardPage'
 import ProjectPage from './pages/ProjectPage'
+import DocsPage from './pages/DocsPage'
 import './index.css'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -33,6 +34,14 @@ function App() {
           element={
             <ProtectedRoute>
               <ProjectPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/project/:id/docs"
+          element={
+            <ProtectedRoute>
+              <DocsPage />
             </ProtectedRoute>
           }
         />
