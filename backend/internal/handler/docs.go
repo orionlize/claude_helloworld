@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -52,7 +53,7 @@ func (h *Handler) GenerateDocs(c *gin.Context) {
 	}
 }
 
-// generateMarkdownDoc generates Markdown documentation
+// generateMarkdownDoc generates Markdown documentation with detailed field information
 func (h *Handler) generateMarkdownDoc(project *model.Project, collections []model.Collection) string {
 	var sb strings.Builder
 
@@ -88,8 +89,24 @@ func (h *Handler) generateMarkdownDoc(project *model.Project, collections []mode
 			sb.WriteString(fmt.Sprintf("**Endpoint:** `%s`\n\n", ep.URL))
 			sb.WriteString(fmt.Sprintf("**Method:** `%s`\n\n", ep.Method))
 
+			// Request Parameters
+			if len(ep.RequestParams) > 0 {
+				sb.WriteString("**Request Parameters:**\n\n")
+				sb.WriteString("| Name | Type | Required | Description |\n")
+				sb.WriteString("|------|------|----------|-------------|\n")
+				for _, param := range ep.RequestParams {
+					required := "No"
+					if param.Required {
+						required = "Yes"
+					}
+					sb.WriteString(fmt.Sprintf("| %s | %s | %s | %s |\n", param.Name, param.Type, required, param.Description))
+				}
+				sb.WriteString("\n")
+			}
+
+			// Request Headers
 			if len(ep.Headers) > 0 {
-				sb.WriteString("**Headers:**\n\n")
+				sb.WriteString("**Request Headers:**\n\n")
 				sb.WriteString("```\n")
 				for key, value := range ep.Headers {
 					sb.WriteString(fmt.Sprintf("%s: %s\n", key, value))
@@ -97,11 +114,65 @@ func (h *Handler) generateMarkdownDoc(project *model.Project, collections []mode
 				sb.WriteString("```\n\n")
 			}
 
-			if ep.Body != nil && *ep.Body != "" {
+			// Request Body
+			if ep.RequestBody != nil {
+				sb.WriteString("**Request Body:**\n\n")
+				sb.WriteString(fmt.Sprintf("**Content Type:** %s\n\n", ep.RequestBody.Type))
+				if len(ep.RequestBody.Schema) > 0 {
+					sb.WriteString("| Name | Type | Required | Description |\n")
+					sb.WriteString("|------|------|----------|-------------|\n")
+					for _, field := range ep.RequestBody.Schema {
+						required := "No"
+						if field.Required {
+							required = "Yes"
+						}
+						sb.WriteString(fmt.Sprintf("| %s | %s | %s | %s |\n", field.Name, field.Type, required, field.Description))
+					}
+					sb.WriteString("\n")
+				}
+				if ep.RequestBody.Example != nil {
+					sb.WriteString("**Example:**\n\n")
+					sb.WriteString("```json\n")
+					exampleJSON, _ := json.Marshal(ep.RequestBody.Example)
+					sb.WriteString(string(exampleJSON))
+					sb.WriteString("\n```\n\n")
+				}
+			} else if ep.Body != nil && *ep.Body != "" {
 				sb.WriteString("**Request Body:**\n\n")
 				sb.WriteString("```json\n")
 				sb.WriteString(*ep.Body)
 				sb.WriteString("\n```\n\n")
+			}
+
+			// Response Parameters
+			if len(ep.ResponseParams) > 0 {
+				sb.WriteString("**Response Fields:**\n\n")
+				sb.WriteString("| Name | Type | Description |\n")
+				sb.WriteString("|------|------|-------------|\n")
+				for _, param := range ep.ResponseParams {
+					sb.WriteString(fmt.Sprintf("| %s | %s | %s |\n", param.Name, param.Type, param.Description))
+				}
+				sb.WriteString("\n")
+			}
+
+			// Response Body
+			if ep.ResponseBody != nil {
+				sb.WriteString("**Response Body:**\n\n")
+				if len(ep.ResponseBody.Schema) > 0 {
+					sb.WriteString("| Name | Type | Description |\n")
+					sb.WriteString("|------|------|-------------|\n")
+					for _, field := range ep.ResponseBody.Schema {
+						sb.WriteString(fmt.Sprintf("| %s | %s | %s |\n", field.Name, field.Type, field.Description))
+					}
+					sb.WriteString("\n")
+				}
+				if ep.ResponseBody.Example != nil {
+					sb.WriteString("**Example:**\n\n")
+					sb.WriteString("```json\n")
+					exampleJSON, _ := json.Marshal(ep.ResponseBody.Example)
+					sb.WriteString(string(exampleJSON))
+					sb.WriteString("\n```\n\n")
+				}
 			}
 
 			sb.WriteString("---\n\n")

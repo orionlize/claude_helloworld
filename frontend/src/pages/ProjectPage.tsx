@@ -6,10 +6,11 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { projectsApi, collectionsApi, endpointsApi, environmentsApi } from '@/lib/api'
 import { useProjectStore } from '@/store/project'
-import { ArrowLeft, Plus, Folder, Trash2, Play, FileText } from 'lucide-react'
+import { ArrowLeft, Plus, Folder, Trash2, Play, FileText, RefreshCw } from 'lucide-react'
 import RequestPanel from '@/components/RequestPanel'
 import ResponseViewer from '@/components/ResponseViewer'
 import EnvironmentSelector from '@/components/EnvironmentSelector'
+import YAPISyncDialog from '@/components/YAPISyncDialog'
 import type { Environment } from '@/types'
 
 type TabType = 'endpoints' | 'test'
@@ -33,6 +34,7 @@ export default function ProjectPage() {
   const [activeTab, setActiveTab] = useState<TabType>('endpoints')
   const [selectedEnvironment, setSelectedEnvironmentState] = useState<Environment>()
   const [showEndpointForm, setShowEndpointForm] = useState(false)
+  const [showYAPIDialog, setShowYAPIDialog] = useState(false)
   const [endpointForm, setEndpointForm] = useState({
     name: '',
     method: 'GET',
@@ -198,8 +200,25 @@ export default function ProjectPage() {
             <FileText className="w-4 h-4 mr-2" />
             View Docs
           </Button>
+          <Button variant="outline" onClick={() => setShowYAPIDialog(true)}>
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Sync YAPI
+          </Button>
         </div>
       </header>
+
+      {/* YAPI Sync Dialog */}
+      <YAPISyncDialog
+        open={showYAPIDialog}
+        onOpenChange={setShowYAPIDialog}
+        projectId={id!}
+        onSuccess={() => {
+          loadCollections()
+          if (selectedCollection) {
+            loadEndpoints(selectedCollection)
+          }
+        }}
+      />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-12 gap-6">

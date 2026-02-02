@@ -26,6 +26,24 @@ export interface Collection {
   updated_at: string
 }
 
+export interface APIParam {
+  name: string
+  type: string
+  param_type: string // path, query, header, body
+  required: boolean
+  description: string
+  default_value?: any
+  children?: APIParam[]
+}
+
+export interface APIBody {
+  type: string // json, form-data, raw, xml
+  data_type: string // object, array, string, etc.
+  schema: APIParam[]
+  example?: any
+  json_schema?: string
+}
+
 export interface Endpoint {
   id: string
   collection_id: string
@@ -36,6 +54,11 @@ export interface Endpoint {
   body: string | null
   description: string
   sort_order: number
+  // Detailed API field information
+  request_params?: APIParam[]
+  request_body?: APIBody
+  response_params?: APIParam[]
+  response_body?: APIBody
   created_at: string
   updated_at: string
 }

@@ -137,4 +137,56 @@ export const testApi = {
     }>>('/test/request', data),
 }
 
+// YAPI Sync API
+export const yapiApi = {
+  test: (data: {
+    yapi_url: string
+    yapi_token: string
+    yapi_project_id: number
+  }) =>
+    api.post<ApiResponse<{
+      message: string
+      yapi_project: {
+        _id: number
+        name: string
+        baseurl: string
+      }
+      total_categories: number
+      total_interfaces: number
+    }>>('/yapi/test', data),
+
+  getProject: (params: {
+    yapi_url: string
+    token: string
+    project_id: number
+  }) =>
+    api.get<ApiResponse<{
+      project: {
+        _id: number
+        name: string
+        baseurl: string
+      }
+      categories: Array<{
+        _id: number
+        name: string
+      }>
+      interfaces: number
+    }>>('/yapi/project', { params }),
+
+  sync: (projectId: string, data: {
+    yapi_url: string
+    yapi_token: string
+    yapi_project_id: number
+  }) =>
+    api.post<ApiResponse<{
+      message: string
+      stats: {
+        created_collections: number
+        updated_collections: number
+        created_endpoints: number
+        updated_endpoints: number
+      }
+    }>>(`/projects/${projectId}/yapi/sync`, data),
+}
+
 export default api

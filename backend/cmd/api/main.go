@@ -95,6 +95,11 @@ func main() {
 			protected.GET("/projects", h.ListProjects)
 			protected.POST("/projects", h.CreateProject)
 
+			// YAPI Sync routes
+			protected.POST("/projects/:pid/yapi/sync", h.SyncFromYAPI)
+			protected.POST("/yapi/test", h.TestYAPIConnection)
+			protected.GET("/yapi/project", h.GetYAPIProjectInfo)
+
 			// Collections (nested under project)
 			protected.GET("/projects/:pid/collections", h.ListCollections)
 			protected.POST("/projects/:pid/collections", h.CreateCollection)
