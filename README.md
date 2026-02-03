@@ -1,281 +1,195 @@
-# APIHub - API Management Platform
+# API 管理平台功能需求清单
 
-A comprehensive API management platform similar to Apifox/Postman, built with modern technologies.
+> 基于 Apifox 功能特性，结合 YAPI 数据同步的 API 调试、测试、文档一体化协作平台
 
-## Tech Stack
+---
 
-### Frontend
-- **React 18** - UI framework
-- **TypeScript** - Type safety
-- **Vite** - Build tool
-- **shadcn/ui** - UI components
-- **TailwindCSS** - Styling
-- **Zustand** - State management
-- **React Router** - Routing
-- **Axios** - HTTP client
+## 一、核心定位
 
-### Backend
-- **Go 1.21** - Backend framework
-- **Gin** - HTTP router
-- **PGX** - PostgreSQL driver
-- **JWT** - Authentication
+**目标**：构建一个集 API 调试、测试、文档于一体的协作平台
 
-### Database
-- **Supabase** - PostgreSQL database with additional features
-- **Docker Compose** - Local development
+**核心特点**：
+- **接口数据来源**：仅支持 YAPI Webhook 推送同步，不支持手动配置
+- **调试能力**：基于同步的接口数据进行调试
+- **测试能力**：基于同步的接口数据创建测试用例
+- **文档能力**：自动生成在线 API 文档
 
-## Features
+---
 
-- 🔐 **User Authentication** - JWT-based authentication system
-- 📁 **Project Management** - Create and manage API projects
-- 🗂️ **Collection Organization** - Group APIs into collections
-- 📝 **API Endpoint Management** - Define and document REST APIs
-- 🧪 **API Testing** - Send HTTP requests and view responses
-- 🔧 **Environment Variables** - Manage multiple environments with variables
-- 🎨 **Modern UI** - Clean and intuitive interface with shadcn/ui
+## 二、功能模块分层
 
-## Project Structure
+### 🔷 第一层：YAPI 数据同步层
+
+| 模块 | 功能点 | 优先级 |
+|------|--------|--------|
+| **Webhook 接收** | 接收 YAPI 推送的接口变更数据 | P0 |
+| **数据解析** | 解析 YAPI 接口数据格式（接口信息、路径参数、查询参数、请求体、响应） | P0 |
+| **接口同步** | 新增接口、更新接口、删除接口同步 | P0 |
+| **分类同步** | 接口分类/项目分组同步 | P0 |
+| **同步日志** | 记录同步成功/失败状态、错误信息 | P0 |
+| **同步状态展示** | 显示最后同步时间、同步状态、差异对比 | P1 |
+| **手动触发同步** | 支持手动从 YAPI 拉取全量数据 | P1 |
+
+### 🔷 第二层：API 调试层
+
+| 模块 | 功能点 | 优先级 |
+|------|--------|--------|
+| **接口列表** | 展示从 YAPI 同步的接口列表（按分类分组） | P0 |
+| **接口详情** | 显示接口定义（从同步数据读取） | P0 |
+| **请求发送** | 基于同步的接口定义发送请求 | P0 |
+| **环境管理** | 多环境切换、环境变量、全局变量 | P0 |
+| **前置/后置脚本** | 请求前预处理、响应后处理 | P1 |
+| **Cookie 管理** | 自动 Cookie 持久化 | P1 |
+| **请求历史** | 历史请求记录、快捷复用 | P1 |
+| **收藏功能** | 收藏常用接口（本地存储） | P1 |
+
+### 🔷 第三层：API 测试层
+
+| 模块 | 功能点 | 优先级 |
+|------|--------|--------|
+| **测试用例** | 基于同步的接口创建测试用例 | P0 |
+| **测试套件** | 用例集合、批量执行 | P0 |
+| **断言验证** | 状态码、响应体、响应头、响应时间断言 | P0 |
+| **数据驱动** | 参数化测试、多组数据测试 | P1 |
+| **测试报告** | 执行结果、通过率、详细日志 | P1 |
+| **性能测试** | 压力测试、并发测试 | P2 |
+
+### 🔷 第四层：Mock 服务层
+
+| 模块 | 功能点 | 优先级 |
+|------|--------|--------|
+| **Mock 规则** | 根据同步的接口 Schema 自动生成 Mock 数据 | P0 |
+| **自定义 Mock** | 针对接口自定义 Mock 模板、脚本 | P1 |
+| **Mock 期望** | 根据请求参数返回不同数据 | P1 |
+| **Mock 服务** | 公网/内网 Mock 地址 | P0 |
+
+### 🔷 第五层：文档层
+
+| 模块 | 功能点 | 优先级 |
+|------|--------|--------|
+| **在线文档** | 基于同步数据自动生成 API 文档页面 | P0 |
+| **文档分享** | 公开/私有链接、权限控制 | P0 |
+| **文档导出** | Markdown/HTML/Word/PDF | P1 |
+| **文档搜索** | 全文搜索、快速定位 | P1 |
+| **代码示例** | 多语言请求代码生成 | P1 |
+
+### 🔷 第六层：AI 辅助层
+
+| 模块 | 功能点 | 优先级 |
+|------|--------|--------|
+| **AI 生成用例** | 根据接口定义自动生成测试用例 | P1 |
+| **AI 生成数据** | 根据用例自动生成测试数据 | P1 |
+| **AI 参数命名** | 智能参数命名建议 | P2 |
+| **AI 规范检测** | 接口文档完整性检测、规范建议 | P1 |
+
+### 🔷 第七层：团队协作层
+
+| 模块 | 功能点 | 优先级 |
+|------|--------|--------|
+| **成员管理** | 邀请成员、角色权限（Owner/Admin/Editor/Viewer） | P0 |
+| **操作日志** | 操作记录审计、变更追溯 | P1 |
+| **评论与讨论** | 接口评论、@提醒 | P2 |
+
+### 🔷 第八层：用户与项目管理层
+
+| 模块 | 功能点 | 优先级 |
+|------|--------|--------|
+| **用户认证** | 登录/注册/Token 认证 | P0 |
+| **项目管理** | 创建项目（绑定 YAPI 项目）、项目成员 | P0 |
+| **YAPI 配置** | 配置 YAPI 地址、Token、Webhook 密钥 | P0 |
+| **个人中心** | 个人信息、API Token 管理 | P1 |
+
+### 🔷 第九层：系统设置层
+
+| 模块 | 功能点 | 优先级 |
+|------|--------|--------|
+| **主题设置** | 亮色/暗色主题、自定义主题色 | P2 |
+| **界面布局** | 自定义工作区布局 | P2 |
+| **快捷键** | 自定义快捷键 | P2 |
+
+---
+
+## 三、YAPI 数据格式说明
+
+### Webhook 推送事件类型
+
+| 事件类型 | 说明 |
+|----------|------|
+| `interface.add` | 新增接口 |
+| `interface.update` | 更新接口 |
+| `interface.delete` | 删除接口 |
+| `project.update` | 项目更新 |
+
+### 接口数据结构（需解析）
 
 ```
-.
-├── backend/                 # Go backend
-│   ├── cmd/                # Application entry points
-│   ├── internal/           # Private application code
-│   │   ├── config/        # Configuration
-│   │   ├── handler/       # HTTP handlers
-│   │   ├── middleware/    # Middleware
-│   │   └── model/         # Data models
-│   ├── pkg/               # Public packages
-│   │   ├── auth/          # Authentication utilities
-│   │   ├── database/      # Database connection
-│   │   ├── logger/        # Logging
-│   │   └── response/      # Response helpers
-│   ├── migrations/        # Database migrations
-│   └── Dockerfile
-├── frontend/              # React frontend
-│   ├── src/
-│   │   ├── components/   # React components
-│   │   ├── lib/          # Utilities and API client
-│   │   ├── pages/        # Page components
-│   │   ├── store/        # State management
-│   │   └── types/        # TypeScript types
-│   ├── Dockerfile
-│   └── nginx.conf
-├── docker-compose.yml     # Docker compose configuration
-└── README.md
-
-## Getting Started
-
-### Prerequisites
-
-- Docker and Docker Compose
-- Node.js 18+ (for local frontend development)
-- Go 1.21+ (for local backend development)
-
-### Quick Start with Docker
-
-1. Clone the repository:
-```bash
-git clone <repository-url>
-cd claude_helloworld
-```
-
-2. Start all services:
-```bash
-docker-compose up -d
-```
-
-3. Access the application:
-- Frontend: http://localhost:5173
-- Backend API: http://localhost:8080
-- Supabase Studio: http://localhost:3000
-
-### Local Development
-
-#### Backend Development
-
-1. Install dependencies:
-```bash
-cd backend
-go mod download
-```
-
-2. Set up environment variables:
-```bash
-cp .env.example .env
-# Edit .env with your configuration
-```
-
-3. Run database migrations:
-```bash
-psql -h localhost -U postgres -d postgres -f migrations/001_init.up.sql
-```
-
-4. Run the backend:
-```bash
-go run cmd/api/main.go
-```
-
-#### Frontend Development
-
-1. Install dependencies:
-```bash
-cd frontend
-npm install
-```
-
-2. Start the development server:
-```bash
-npm run dev
-```
-
-3. Build for production:
-```bash
-npm run build
-```
-
-## API Documentation
-
-### Authentication
-
-#### Register
-```http
-POST /api/v1/auth/register
-Content-Type: application/json
-
 {
-  "username": "johndoe",
-  "email": "john@example.com",
-  "password": "password123"
-}
-```
-
-#### Login
-```http
-POST /api/v1/auth/login
-Content-Type: application/json
-
-{
-  "email": "john@example.com",
-  "password": "password123"
-}
-```
-
-### Projects
-
-#### List Projects
-```http
-GET /api/v1/projects
-Authorization: Bearer <token>
-```
-
-#### Create Project
-```http
-POST /api/v1/projects
-Authorization: Bearer <token>
-Content-Type: application/json
-
-{
-  "name": "My API Project",
-  "description": "Project description"
-}
-```
-
-### Collections
-
-#### List Collections
-```http
-GET /api/v1/projects/:project_id/collections
-Authorization: Bearer <token>
-```
-
-#### Create Collection
-```http
-POST /api/v1/projects/:project_id/collections
-Authorization: Bearer <token>
-Content-Type: application/json
-
-{
-  "name": "User APIs",
-  "description": "User management endpoints"
-}
-```
-
-### Endpoints
-
-#### List Endpoints
-```http
-GET /api/v1/collections/:collection_id/endpoints
-Authorization: Bearer <token>
-```
-
-#### Create Endpoint
-```http
-POST /api/v1/collections/:collection_id/endpoints
-Authorization: Bearer <token>
-Content-Type: application/json
-
-{
-  "name": "Get User",
-  "method": "GET",
-  "url": "https://api.example.com/users/:id",
-  "description": "Retrieve user by ID"
-}
-```
-
-### Test Request
-
-#### Send HTTP Request
-```http
-POST /api/v1/test/request
-Authorization: Bearer <token>
-Content-Type: application/json
-
-{
-  "method": "GET",
-  "url": "https://api.example.com/users",
-  "headers": {
-    "Authorization": "Bearer token"
+  "type": "interface.update",
+  "data": {
+    "id": 接口ID,
+    "name": 接口名称,
+    "path": 接口路径,
+    "method": 请求方法,
+    "title": 接口标题,
+    "status": 接口状态,
+    "req_params": 路径参数,
+    "req_query": 查询参数,
+    "req_headers": 请求头,
+    "req_body_type": 请求体类型,
+    "req_body_other": 请求体定义,
+    "res_body": 响应体定义,
+    "catid": 分类ID
   }
 }
 ```
 
-## Environment Variables
+---
 
-### Backend
-- `ENVIRONMENT` - development|production
-- `SERVER_PORT` - Server port (default: 8080)
-- `DB_HOST` - Database host
-- `DB_PORT` - Database port
-- `DB_USER` - Database user
-- `DB_PASSWORD` - Database password
-- `DB_NAME` - Database name
-- `JWT_SECRET` - JWT signing secret
-- `FRONTEND_URL` - Frontend URL for CORS
+## 四、技术架构建议
 
-### Frontend
-- `VITE_API_URL` - Backend API URL
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                           前端层                                  │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐         │
+│  │ API 调试 │  │ API 测试 │  │  Mock   │  │  文档   │         │
+│  └──────────┘  └──────────┘  └──────────┘  └──────────┘         │
+├─────────────────────────────────────────────────────────────────┤
+│                           后端层                                  │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐         │
+│  │Webhook接收│ │ 同步处理 │  │ 测试引擎 │  │ Mock服务│         │
+│  └──────────┘  └──────────┘  └──────────┘  └──────────┘         │
+│  ┌─────────────────────────────────────────────────────────┐    │
+│  │              YAPI 数据格式解析器                         │    │
+│  └─────────────────────────────────────────────────────────┘    │
+├─────────────────────────────────────────────────────────────────┤
+│                           数据层                                  │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐         │
+│  │ 用户/权限 │  │ 接口数据 │  │ 测试数据 │  │ 同步日志 │         │
+│  └──────────┘  └──────────┘  └──────────┘  └──────────┘         │
+└─────────────────────────────────────────────────────────────────┘
+                              ↑
+                              │ Webhook
+                              │
+                    ┌─────────┴─────────┐
+                    │      YAPI 系统     │
+                    └───────────────────┘
+```
 
-## Roadmap
+---
 
-- [ ] API request history
-- [ ] Automated API documentation generation
-- [ ] Mock server
-- [ ] Import/Export (Postman, OpenAPI)
-- [ ] Team collaboration features
-- [ ] API monitoring and analytics
-- [ ] Webhook testing
-- [ ] GraphQL support
+## 五、开发优先级建议
 
-## Contributing
+| 阶段 | 核心功能 | 目标 |
+|------|----------|------|
+| **MVP** | YAPI Webhook 接收、接口同步、请求调试、在线文档 | 基础可用 |
+| **V1.0** | 测试用例、环境管理、团队协作、Mock 服务 | 团队使用 |
+| **V2.0** | AI 辅助、高级测试、性能测试 | 智能升级 |
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+---
 
-## License
+## 六、参考资源
 
-MIT License
-
-## Acknowledgments
-
-- Built with [shadcn/ui](https://ui.shadcn.com/)
-- Inspired by [Apifox](https://apifox.com/) and [Postman](https://www.postman.com/)
+- [Apifox 官方网站](https://apifox.com)
+- [Apifox 功能更新博客](https://apifox.com/blog/)
+- [YAPI 官方文档](https://hellosean1025.github.io/yapi/)
+- [OpenAPI 规范](https://spec.openapis.org/oas/latest.html)
